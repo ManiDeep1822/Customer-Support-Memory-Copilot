@@ -1,7 +1,7 @@
 <div align="center">
 
-# ⚡ [Project Name]
-### *Next-Gen Autonomous Agent System for [Domain / Problem]*
+# ⚡ CodeSwarm AI
+### *Next-Gen Autonomous Multi-Agent System for Codebase Intelligence & Auto-Debugging*
 
 [![Hackathon Project](https://img.shields.io/badge/Hackathon-2026-orange.svg?style=for-the-badge&logo=hackster)](https://github.com/ManiDeep1822/Hackathon)
 [![Branch Protection](https://img.shields.io/badge/Main-Protected-green.svg?style=for-the-badge&logo=github)](https://github.com/ManiDeep1822/Hackathon)
@@ -19,12 +19,12 @@
 
 ## 📖 Overview
 
-**[Project Name]** is an intelligent, multi-agent autonomous system built to solve **[Specific Problem Statement]**. By leveraging cutting-edge Generative AI models and tool-calling agents, it automates complex workflows, synthesizes multimodal inputs, and delivers real-time actionable outcomes through an intuitive web interface.
+**CodeSwarm AI** is an intelligent, multi-agent autonomous system built to solve **Codebase Comprehension, Automated Documentation & Intelligent Bug Resolution**. By leveraging cutting-edge Generative AI models and tool-calling agents, it automates complex workflows, synthesizes multimodal inputs, and delivers real-time actionable outcomes through an intuitive web interface.
 
 ### 🎯 The Problem
-- **Inefficiency & Manual Bottlenecks**: [Describe current painful manual process]
-- **Information Fragmentation**: Data and decision-making are scattered across siloed sources.
-- **Latency in Execution**: Delays in processing, validation, and insight generation.
+- **Inefficiency & Manual Bottlenecks**: Developers spend countless hours manually navigating massive codebases, tracing complex dependencies, writing boilerplate documentation, and debugging runtime errors.
+- **Information Fragmentation**: Data and decision-making are scattered across siloed sources, commit logs, issue trackers, and implicit developer knowledge.
+- **Latency in Execution**: Delays in processing, validation, and insight generation slow down development velocity and onboarding.
 
 ### 💡 Our Solution
 - **Autonomous Multi-Agent Orchestration**: Specialized sub-agents collaborate to plan, execute, and verify tasks.
