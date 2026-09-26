@@ -72,7 +72,7 @@ flowchart TD
 ```
 
 ---
-
+.
 ## ✨ Key Features
 
 - 🤖 **Autonomous Multi-Agent Swarm**: Modular agents specialized in planning, research, coding, and synthesis.
