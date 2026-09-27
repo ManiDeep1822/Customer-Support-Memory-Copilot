@@ -42,10 +42,9 @@ git checkout -b <yourname>/<feature>
 # 2. Copy env template and fill in your keys
 copy .env.example .env
 
-# 3. Backend
-cd backend
-npm install
-npm run dev
+# 3. Backend (FastAPI — run from repo root)
+pip install -r backend/requirements.txt
+uvicorn backend.main:app --reload --port 8000
 
 # 4. Frontend (separate terminal)
 cd frontend

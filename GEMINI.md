@@ -6,9 +6,9 @@ Read this file first, every session, before generating any code. Then read `READ
 
 A support-desk copilot (hackathon build, Hindsight memory system) that lets a support rep see a returning customer's real history and an escalation-risk signal, with a Memory ON/OFF toggle so the effect of memory is demonstrable side by side. Full detail: `docs/master-prompt.md` for vision, `docs/SRS.md` for requirements, `docs/TRS.md` for the technical contract.
 
-## Backend stack — STATUS: NOT YET LOCKED
+## Backend stack — STATUS: LOCKED (FastAPI / Python)
 
-`docs/TRS.md` §2 requires one backend stack chosen (Node/Express **or** FastAPI), written into that file, before any backend code is generated. **If this line still says "team picks one" when you're reading this, stop and ask the human which one before writing any `/backend` code.** Do not default to one silently — a wrong guess here means two people's generated code target different runtimes and nothing merges.
+`docs/TRS.md` §2 has been updated and locked to FastAPI (Python). All backend code in `/backend` will target Python / FastAPI.
 
 ## Hard rules (apply to every session, every person)
 
@@ -20,6 +20,7 @@ A support-desk copilot (hackathon build, Hindsight memory system) that lets a su
 6. **Follow SRS non-functional requirements as constraints, not suggestions** — particularly NFR-2 (Groq retry/fallback: `openai/gpt-oss-120b` → `qwen/qwen3-32b` on function-calling errors) and NFR-3 (dense professional UI, not a generic AI-chatbot template).
 7. **Don't build anything listed under SRS §7 / TRS §8 (Out of Scope / Non-Goals).** No auth, no multi-brand support, no custom ML model, no mobile polish, no test suite beyond manual verification, no CI/CD beyond keeping the repo buildable. Time is the scarce resource — scope discipline matters more than completeness.
 8. **If `.env` doesn't exist yet, create it from `.env.example` and tell the human which keys are still empty.** Never invent placeholder API keys that look real, and never commit `.env`.
+9. **Never generate, fabricate, or fall back to synthetic/sample ticket data.** The real dataset (Kaggle Customer Support on Twitter, filtered for AmazonHelp) will be placed in `/data/raw/` by the human. If `filter_dataset.py` is run and the expected raw file isn't present yet, it must fail loudly and tell the human what file it expected and where — it must never quietly generate placeholder/fixture customers to keep the pipeline running. Real data was a deliberate, explicit decision for this project (see SRS §6) — an agent-generated fallback silently reintroducing synthetic data defeats that decision even if the file names and schema look identical.
 
 ## Session order (if the repo is still just docs, no code)
 

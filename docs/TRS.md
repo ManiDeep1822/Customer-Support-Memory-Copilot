@@ -34,7 +34,7 @@ Decision: **pick ONE backend stack (Node/Express OR Python/FastAPI) before anyon
 | Layer | Choice |
 |---|---|
 | Frontend | React + Vite, Tailwind (or plain CSS) |
-| Backend | Node/Express *or* FastAPI — team picks one, single decision, written here once decided |
+| Backend | FastAPI (Python) — locked choice |
 | LLM | Groq — primary `openai/gpt-oss-120b`, fallback `qwen/qwen3-32b` |
 | Memory | Hindsight Cloud (hosted) |
 | Storage | None beyond Hindsight + static seeded JSON — no separate DB |
@@ -120,8 +120,8 @@ Base path: `/api`
 |---|---|---|
 | `/scripts/filter_dataset.py` | Person C | Outputs `/data/filtered_customers.json` matching §3.1 schema |
 | `/scripts/seed_hindsight.py` | Person C | Reads filtered JSON, calls Hindsight `retain` per §3.3 |
-| `/backend/services/hindsight.js` (or `.py`) | Person A | Wraps retain/recall/reflect, enforces `customer_id` filter |
-| `/backend/services/llm.js` (or `.py`) | Person A | Groq call + retry/fallback per NFR-2 |
+| `/backend/services/hindsight.py` | Person A | Wraps retain/recall/reflect, enforces `customer_id` filter |
+| `/backend/services/llm.py` | Person A | Groq call + retry/fallback per NFR-2 |
 | `/backend/routes/*` | Person B | Implements §4 contract exactly — no field renaming |
 | `/frontend/*` | Person D | Consumes §4 contract exactly |
 

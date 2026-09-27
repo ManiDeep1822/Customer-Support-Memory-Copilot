@@ -1,0 +1,622 @@
+[
+  {
+    "customer_id": "cust_0001",
+    "display_label": "Customer #8220",
+    "brand_handle": "AmazonHelp",
+    "threads": [
+      {
+        "thread_id": "thread_001",
+        "timestamp_start": "2017-11-28T21:12:37Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Ok thanks - they tried to contact the person who 'delivered' it but 'they were closed'.....",
+            "timestamp": "2017-11-28T21:12:37Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer You're welcome. Did our agent give you a time frame for when they open? Keep us updated! ^JP",
+            "timestamp": "2017-11-28T21:18:27Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp No - they just said \"they are not open right now\"",
+            "timestamp": "2017-11-28T21:20:10Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer I know how frustrating this can be. Please give us a second chance to contact the carrier for you. You can reach us here: https://t.co/NTR4blm5de ^BA",
+            "timestamp": "2017-11-28T21:23:32Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Ok - when will you do that??",
+            "timestamp": "2017-11-28T21:25:09Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer We're unable to access accounts on Twitter. Please contact us using the link ^BA provided so we can contact them for you. ^LI",
+            "timestamp": "2017-11-28T21:30:32Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Ok - i think they might be contacted again soon",
+            "timestamp": "2017-11-28T21:32:42Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp ??",
+            "timestamp": "2017-11-28T22:02:07Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_002",
+        "timestamp_start": "2017-11-28T22:33:03Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Maybe the person who apparently delivered it to the wrong address as it was dark gave the people at the wrong address someone else's personal details which is not very good - so what will be done about that??",
+            "timestamp": "2017-11-28T22:33:03Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer When you contacted us at the above link, did we mention escalating carrier feedback? If not, please send us an e-mail there to get this escalated. ^JM",
+            "timestamp": "2017-11-28T22:44:00Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp But they could still have someone else's details",
+            "timestamp": "2017-11-28T22:50:09Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp ??",
+            "timestamp": "2017-11-28T23:28:18Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_003",
+        "timestamp_start": "2017-11-29T20:12:24Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp How do i know if i am subscribed to 'Amazon prime'??",
+            "timestamp": "2017-11-29T20:12:24Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer If you go to your account click where it says, \"Hello (your name) Account and list\" then click on the box that says, \"Prime\" on the left-hand side it will tell you your Prime status. I hope this helps! ^LS",
+            "timestamp": "2017-11-29T20:19:53Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Ok thanks - why does package have 'Amazon Prime' tape around it yet not a member??",
+            "timestamp": "2017-11-29T20:22:19Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer This is Amazon's unique tape for our shipping boxes, not an indication of your Prime status. ^ST",
+            "timestamp": "2017-11-29T20:39:00Z"
+          }
+        ]
+      }
+    ],
+    "held_out_thread": {
+      "thread_id": "thread_004",
+      "messages": [
+        {
+          "role": "customer",
+          "text": "@AmazonHelp Ok thanks - why does package have 'Amazon Prime' tape around it yet not a member??",
+          "timestamp": "2017-11-29T20:22:19Z"
+        }
+      ]
+    }
+  },
+  {
+    "customer_id": "cust_0002",
+    "display_label": "Customer #9059",
+    "brand_handle": "AmazonHelp",
+    "threads": [
+      {
+        "thread_id": "thread_001",
+        "timestamp_start": "2017-10-10T11:58:25Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp @Customer After placing the order [ORDER_ID] a mail https://t.co/VO4Bq1EnjA",
+            "timestamp": "2017-10-10T11:58:25Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Please don't provide your order [ORDER_ID], we consider it personal information. Our Twitter page is visible to public. ^HA",
+            "timestamp": "2017-10-10T12:08:37Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_002",
+        "timestamp_start": "2017-10-10T13:17:04Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp It's been 3 hours to raised this concern still didn't get resolution you guys massed up my friends bday surprise.",
+            "timestamp": "2017-10-10T13:17:04Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer We apologize for the stretch. We have your details and working on it. We'll reach out shortly. ^CB",
+            "timestamp": "2017-10-10T13:29:00Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp How long it will take can you please deliver it now.",
+            "timestamp": "2017-10-10T13:43:54Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Now might not be probable. We'll be reverting shortly with further updates. Kindly wait until we reach out. Thanks! ^AB",
+            "timestamp": "2017-10-10T14:12:00Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp We are waiting from four hours",
+            "timestamp": "2017-10-10T14:16:52Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer We value your time. We'll be reaching out at the earliest. ^CB",
+            "timestamp": "2017-10-10T14:42:42Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Just to reply this you took one hour",
+            "timestamp": "2017-10-10T14:44:19Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp That it took 24 hour since that time m writing you and you guys did nothing it's really terrible.",
+            "timestamp": "2017-10-10T14:48:35Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_003",
+        "timestamp_start": "2017-10-11T03:31:52Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp What the fuck you guys are doing why the delivery date showing me like this https://t.co/IiGPVS6imy",
+            "timestamp": "2017-10-11T03:31:52Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer here: https://t.co/9OllYTGo3U. Kindly check and revert. (2/2) ^ST",
+            "timestamp": "2017-10-11T03:58:52Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp There is nothing in link can you guys call me [PHONE]",
+            "timestamp": "2017-10-11T04:07:39Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Please don't provide your contact details, we consider it to be personal information. Our page is visible to the public. ^KA",
+            "timestamp": "2017-10-11T04:36:52Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_004",
+        "timestamp_start": "2017-10-11T04:07:39Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp There is nothing in link can you guys call me [PHONE]",
+            "timestamp": "2017-10-11T04:07:39Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Please don't provide your contact details, we consider it to be personal information. Our page is visible to the public. ^KA",
+            "timestamp": "2017-10-11T04:36:52Z"
+          }
+        ]
+      }
+    ],
+    "held_out_thread": {
+      "thread_id": "thread_005",
+      "messages": [
+        {
+          "role": "customer",
+          "text": "@AmazonHelp Worlds worst costumer service you have only donkeys are working with you who only can write we will get back to you.",
+          "timestamp": "2017-10-11T08:15:59Z"
+        }
+      ]
+    }
+  },
+  {
+    "customer_id": "cust_0003",
+    "display_label": "Customer #7050",
+    "brand_handle": "AmazonHelp",
+    "threads": [
+      {
+        "thread_id": "thread_004",
+        "timestamp_start": "2017-11-05T08:34:18Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Yes and the replied as to how 2 add a cc. :( Then sent money to ac they know closed. And that was wed. I call and chase daily. Nothing.",
+            "timestamp": "2017-11-05T08:34:18Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Please get in touch via https://t.co/tkLCr7DNil and we can look into this for you. ^BM",
+            "timestamp": "2017-11-05T08:48:30Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Here Is what u need. call me 07834 350503",
+            "timestamp": "2017-11-05T08:56:53Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_005",
+        "timestamp_start": "2017-11-05T08:55:08Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Cant as wants a time stamp and I can't work out how to get this. Tweet it to me",
+            "timestamp": "2017-11-05T08:55:08Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer We're unable to access your acc here. Get in touch here: https://t.co/JzP7hlA23B and we'll be happy to help. ^RS",
+            "timestamp": "2017-11-05T09:06:23Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Need to simply go pass on to seller central. But someone who speaks English. Name same as tweet handle.",
+            "timestamp": "2017-11-05T09:08:17Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_001",
+        "timestamp_start": "2017-11-05T08:59:59Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp How to add a credit card...because they are manillan and they can't read English https://t.co/PRlbzYtZE7",
+            "timestamp": "2017-11-05T08:59:59Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Did you contact them by phone or email? ^PK",
+            "timestamp": "2017-11-05T09:12:27Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp By email call &amp; chat. Since Wed. \u00a3500 sent to a closed ac. No idea where it is. And current bal can't access. No action from Manila l",
+            "timestamp": "2017-11-05T09:36:47Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer As we don't have access to account details here pls reach out here again for help https://t.co/Eq0hMvXaRN ^KM",
+            "timestamp": "2017-11-05T09:54:26Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Or are you trying to palm me off as well ??",
+            "timestamp": "2017-11-05T10:03:42Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_002",
+        "timestamp_start": "2017-11-05T09:36:47Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp By email call &amp; chat. Since Wed. \u00a3500 sent to a closed ac. No idea where it is. And current bal can't access. No action from Manila l",
+            "timestamp": "2017-11-05T09:36:47Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer As we don't have access to account details here pls reach out here again for help https://t.co/Eq0hMvXaRN ^KM",
+            "timestamp": "2017-11-05T09:54:26Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Or are you trying to palm me off as well ??",
+            "timestamp": "2017-11-05T10:03:42Z"
+          }
+        ]
+      }
+    ],
+    "held_out_thread": {
+      "thread_id": "thread_003",
+      "messages": [
+        {
+          "role": "customer",
+          "text": "@AmazonHelp To remind you my number is 07834 350503. Need someone with English to call me though.",
+          "timestamp": "2017-11-05T10:20:41Z"
+        },
+        {
+          "role": "customer",
+          "text": "@AmazonHelp You don't need to. But you do need to help. And it's simple! Get someone to call me.",
+          "timestamp": "2017-11-05T11:43:58Z"
+        },
+        {
+          "role": "customer",
+          "text": "@AmazonHelp @Customer U.K. And have answered already these questions. Lots of repetition Amazon !",
+          "timestamp": "2017-11-05T11:44:41Z"
+        }
+      ]
+    }
+  },
+  {
+    "customer_id": "cust_0004",
+    "display_label": "Customer #3922",
+    "brand_handle": "AmazonHelp",
+    "threads": [
+      {
+        "thread_id": "thread_002",
+        "timestamp_start": "2017-09-28T12:32:57Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Still locked out of my account. 3 weeks now. Your support by telephone and email is awful",
+            "timestamp": "2017-09-28T12:32:57Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Hi, sorry to hear that. Have you received an email from the account specialists? Please check spam/junk folders also. ^JJ",
+            "timestamp": "2017-09-28T12:45:00Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp I have called around 5 times and keep being told it\u2019s been escalated. Have heard nothing else back. When I email they ask me to call",
+            "timestamp": "2017-09-28T12:46:02Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer My team would like to take a look at this for you Oliver. Please click and fill out the form: https://t.co/gg4j7wQVMb ^EM",
+            "timestamp": "2017-09-29T12:30:25Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp @Customer @AmazonHelp I filled out this form, twice. It says 12hr for someone to contact me. Nobody has. Why the lie?",
+            "timestamp": "2017-10-05T15:40:23Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_001",
+        "timestamp_start": "2017-09-28T12:46:02Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp I have called around 5 times and keep being told it\u2019s been escalated. Have heard nothing else back. When I email they ask me to call",
+            "timestamp": "2017-09-28T12:46:02Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer My team would like to take a look at this for you Oliver. Please click and fill out the form: https://t.co/gg4j7wQVMb ^EM",
+            "timestamp": "2017-09-29T12:30:25Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp @Customer @AmazonHelp I filled out this form, twice. It says 12hr for someone to contact me. Nobody has. Why the lie?",
+            "timestamp": "2017-10-05T15:40:23Z"
+          }
+        ]
+      }
+    ],
+    "held_out_thread": {
+      "thread_id": "thread_003",
+      "messages": [
+        {
+          "role": "customer",
+          "text": "@Customer Would love to read this on my #kindle but unfortunately @AmazonHelp are incompetent so I can't sign in to my account. 1 month and counting",
+          "timestamp": "2017-10-05T16:38:26Z"
+        },
+        {
+          "role": "customer",
+          "text": "@AmazonHelp https://t.co/TEyXLTN8cY",
+          "timestamp": "2017-10-05T16:46:27Z"
+        },
+        {
+          "role": "customer",
+          "text": "@Customer @AmazonHelp Let me guess, they are working on it. #Liars",
+          "timestamp": "2017-10-06T13:59:37Z"
+        },
+        {
+          "role": "customer",
+          "text": "@Customer @AmazonHelp You got it",
+          "timestamp": "2017-10-06T14:12:32Z"
+        }
+      ]
+    }
+  },
+  {
+    "customer_id": "cust_0005",
+    "display_label": "Customer #8228",
+    "brand_handle": "AmazonHelp",
+    "threads": [
+      {
+        "thread_id": "thread_001",
+        "timestamp_start": "2017-10-05T14:25:28Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp And I need my product... I don\u2019t give a damn shit about your order no.",
+            "timestamp": "2017-10-05T14:25:28Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer I get your disappointment. Please request a callback using the link shared with you earlier. ^MP",
+            "timestamp": "2017-10-05T14:50:32Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Why you want everything from my side .....if you really want to resolve the issue then do some effort",
+            "timestamp": "2017-10-05T14:52:52Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Naveen, owing to security reasons , we can't access your account over Twitter. Therefore, the request. ^CB",
+            "timestamp": "2017-10-05T15:10:09Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp I already filled the form yesterday",
+            "timestamp": "2017-10-05T15:19:50Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp My no is [PHONE] in your account",
+            "timestamp": "2017-10-05T15:21:57Z"
+          }
+        ]
+      },
+      {
+        "thread_id": "thread_002",
+        "timestamp_start": "2017-10-05T14:52:52Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Why you want everything from my side .....if you really want to resolve the issue then do some effort",
+            "timestamp": "2017-10-05T14:52:52Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Naveen, owing to security reasons , we can't access your account over Twitter. Therefore, the request. ^CB",
+            "timestamp": "2017-10-05T15:10:09Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp I already filled the form yesterday",
+            "timestamp": "2017-10-05T15:19:50Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp My no is [PHONE] in your account",
+            "timestamp": "2017-10-05T15:21:57Z"
+          }
+        ]
+      }
+    ],
+    "held_out_thread": {
+      "thread_id": "thread_003",
+      "messages": [
+        {
+          "role": "customer",
+          "text": "@AmazonHelp I am still facing it.... I need the solution ......",
+          "timestamp": "2017-10-05T17:33:56Z"
+        },
+        {
+          "role": "customer",
+          "text": "@AmazonHelp Didn\u2019t received the email",
+          "timestamp": "2017-10-06T00:18:35Z"
+        }
+      ]
+    }
+  },
+  {
+    "customer_id": "cust_0006",
+    "display_label": "Customer #6473",
+    "brand_handle": "AmazonHelp",
+    "threads": [
+      {
+        "thread_id": "thread_001",
+        "timestamp_start": "2017-10-28T05:04:02Z",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Same response that we are looking into the issue. Are you going to give my money back or not?",
+            "timestamp": "2017-10-28T05:04:02Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Kindly revert to our email correspondence with further query on this and we'll be happy to take it over from there. ^AB",
+            "timestamp": "2017-10-28T05:10:29Z"
+          },
+          {
+            "role": "customer",
+            "text": "@AmazonHelp Done. Now by when will I get back my money?",
+            "timestamp": "2017-10-28T05:13:26Z"
+          },
+          {
+            "role": "brand",
+            "text": "@Customer Since you've responded to the mail, our team will get back to you with an update shortly. Appreciate your patience. ^EM",
+            "timestamp": "2017-10-28T05:31:37Z"
+          }
+        ]
+      }
+    ],
+    "held_out_thread": {
+      "thread_id": "thread_002",
+      "messages": [
+        {
+          "role": "customer",
+          "text": "@AmazonHelp Done. Now by when will I get back my money?",
+          "timestamp": "2017-10-28T05:13:26Z"
+        }
+      ]
+    }
+  },
+  {
+    "customer_id": "cust_0007",
+    "display_label": "Customer #1989",
+    "brand_handle": "AmazonHelp",
+    "threads": [],
+    "held_out_thread": {
+      "thread_id": "thread_001",
+      "messages": [
+        {
+          "role": "customer",
+          "text": "@AmazonHelp What the hell, the mail days just return the item , did you guys even read my concerns. Hadd hai yaar, made a mistake buying from you",
+          "timestamp": "2017-11-11T03:51:03Z"
+        },
+        {
+          "role": "customer",
+          "text": "@AmazonHelp Already did, but you guys are not helpful. That's the entire process.",
+          "timestamp": "2017-11-11T04:12:03Z"
+        },
+        {
+          "role": "customer",
+          "text": "@AmazonHelp Can anyone call right away please",
+          "timestamp": "2017-11-11T04:29:35Z"
+        },
+        {
+          "role": "customer",
+          "text": "@AmazonHelp Okay",
+          "timestamp": "2017-11-11T05:04:01Z"
+        }
+      ]
+    }
+  },
+  {
+    "customer_id": "cust_0008",
+    "display_label": "Customer #2473",
+    "brand_handle": "AmazonHelp",
+    "threads": [],
+    "held_out_thread": {
+      "thread_id": "thread_001",
+      "messages": [
+        {
+          "role": "customer",
+          "text": "@Customer @AmazonHelp @Customer @Customer I'm sorry to hear about this. If you'll send yr name &amp; tracking # to __email__, I'd like to see if I can provide more info.",
+          "timestamp": "2017-11-21T00:41:45Z"
+        },
+        {
+          "role": "customer",
+          "text": "@Customer @AmazonHelp @Customer @Customer No info needed. It was delivered eventually. But your drivers are lying about the time they make deliveries.",
+          "timestamp": "2017-11-21T00:52:16Z"
+        }
+      ]
+    }
+  }
+]
