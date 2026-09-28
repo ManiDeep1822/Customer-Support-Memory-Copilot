@@ -27,14 +27,25 @@ export function AmazonEmblem({ className = "w-6 h-6" }) {
   );
 }
 
-// Official Amazon Header Branding (Emblem + Wordmark, font-independent vector pairing)
-export function AmazonLogo({ className = "h-6 w-auto" }) {
+// Official Amazon Header Branding (amazon.in + Smile Arrow Vector)
+export function AmazonLogo({ className = "h-6 w-auto", dark = false }) {
   return (
-    <div className={`flex items-center gap-2 select-none ${className}`}>
-      <AmazonEmblem className="w-7 h-7 shadow-xs flex-shrink-0" />
-      <span className="font-black text-base tracking-tight text-slate-900 font-sans leading-none relative -top-[1.5px]">
-        amazon
-      </span>
+    <div className={`flex items-center gap-1.5 select-none ${className}`}>
+      <div className="flex flex-col relative">
+        <div className="flex items-baseline gap-0.5">
+          <span className={`font-black text-lg tracking-tighter font-sans leading-none ${dark ? 'text-white' : 'text-slate-900'}`}>
+            amazon
+          </span>
+          <span className={`text-[10px] font-bold ${dark ? 'text-slate-300' : 'text-slate-600'}`}>
+            .in
+          </span>
+        </div>
+        {/* Official Amazon Smile Curve in Amazon Amber #FF9900 */}
+        <svg className="w-14 h-2.5 -mt-0.5" viewBox="0 0 50 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 2 3 Q 25 11 48 3" stroke="#FF9900" strokeWidth="2.8" strokeLinecap="round" />
+          <path d="M 44 2 L 48 3 L 45 6.5" fill="#FF9900" stroke="#FF9900" strokeWidth="1" />
+        </svg>
+      </div>
     </div>
   );
 }

@@ -21,7 +21,14 @@ from backend.config import (
     LLM_PRIMARY_MODEL,
     LLM_FALLBACK_MODEL
 )
-from backend.models import RecalledItem, RiskProfile
+from backend.models import (
+    RecalledItem, 
+    RiskProfile, 
+    Customer,
+    FrustrationSession, 
+    FrustrationTrajectory, 
+    AgentActionRecommendation
+)
 
 logger = logging.getLogger("llm")
 
@@ -38,17 +45,19 @@ class LLMService:
         customer_label: str,
         current_message: str,
         memory_enabled: bool,
-        recalled_items: Optional[List[RecalledItem]] = None
+        recalled_items: Optional[List[RecalledItem]] = None,
+        core_memory: Optional[List[str]] = None
     ) -> str:
         """
         Generates a suggested agent reply for the support representative.
         - If memory_enabled is False: uses strictly current message content (FR-4).
         - If memory_enabled is True: incorporates recalled experiences and opinions (FR-5).
+        - Also incorporates MemGPT Core Memory pinned customer facts if present.
         """
         if not self.client:
             return self._simulated_reply(customer_label, current_message, memory_enabled, recalled_items)
 
-        system_prompt = self._build_system_prompt(customer_label, memory_enabled, recalled_items)
+        system_prompt = self._build_system_prompt(customer_label, memory_enabled, recalled_items, core_memory)
         user_prompt = f"Customer Message:\n\"{current_message}\"\n\nDraft a concise, empathetic, professional support reply from AmazonHelp."
 
         # NFR-2 Execution: Primary -> Retry Primary -> Fallback Model -> Degraded message
@@ -89,13 +98,19 @@ class LLMService:
         self,
         customer_label: str,
         memory_enabled: bool,
-        recalled_items: Optional[List[RecalledItem]]
+        recalled_items: Optional[List[RecalledItem]],
+        core_memory: Optional[List[str]] = None
     ) -> str:
+        core_facts_text = ""
+        if core_memory and len(core_memory) > 0:
+            core_facts_text = "\n[PINNED CORE MEMORY FACTS (MemGPT Working Memory)]:\n" + "\n".join([f"📌 {fact}" for fact in core_memory]) + "\n"
+
         if not memory_enabled or not recalled_items:
             # Memory OFF (FR-4): Standard stateless bot
             return (
                 "You are an AmazonHelp support copilot. Memory is DISABLED for this session. "
                 "You have NO memory of any past interactions with this customer. "
+                f"{core_facts_text}"
                 "Respond strictly based on the user's latest message. "
                 "Ask standard clarification questions (e.g. order numbers, tracking info) as if hearing about the issue for the very first time. "
                 "Never cite any past conversation or assume prior context."
@@ -106,9 +121,10 @@ class LLMService:
         return (
             f"You are an AmazonHelp support copilot assisting a support rep with {customer_label}. "
             "Memory is ENABLED. You have access to persistent Hindsight memories from past interactions:\n"
-            f"{mem_text}\n\n"
+            f"{mem_text}\n"
+            f"{core_facts_text}\n"
             "Instructions:\n"
-            "1. Reference relevant past details (e.g. earlier replacements, tracking numbers, or recurring issues) so the customer never has to repeat themselves.\n"
+            "1. Reference relevant past details and pinned core facts so the customer never has to repeat themselves.\n"
             "2. If repeat contacts or declining sentiment are noted, acknowledge their frustration directly and propose an immediate proactive solution or escalation.\n"
             "3. Maintain a warm, highly accountable, and professional tone."
         )
@@ -168,6 +184,254 @@ class LLMService:
             confidence=confidence,
             risk_level=risk_level
         )
+
+    def compute_frustration_trajectory(self, customer: Customer) -> FrustrationTrajectory:
+        """
+        Feature 1: Computes multi-session frustration progression across historical threads & live ticket.
+        """
+        all_sessions = []
+        threads = customer.threads or []
+        held_out = customer.held_out_thread
+
+        distress_keywords = [
+            "broken", "damaged", "again", "still waiting", "never arrived", 
+            "terrible", "unacceptable", "refund", "frustrated", "hung up", 
+            "disgusted", "unreliable", "tape", "prime", "donkeys", "email", "money"
+        ]
+
+        # 1. Historical Threads
+        for idx, t in enumerate(threads, 1):
+            text = " ".join([m.text for m in t.messages]).lower()
+            matches = sum(1 for kw in distress_keywords if kw in text)
+            
+            score = min(98, max(20, 25 + (idx * 18) + (matches * 12)))
+            if score >= 80:
+                level = "Critical"
+            elif score >= 60:
+                level = "High"
+            elif score >= 40:
+                level = "Medium"
+            else:
+                level = "Low"
+
+            # Dynamic summary snippet from actual customer message
+            cust_msgs = [m.text.replace("@AmazonHelp", "").strip() for m in t.messages if m.role == 'customer']
+            snippet = cust_msgs[0] if cust_msgs else ""
+            if len(snippet) > 55:
+                snippet = snippet[:52] + "..."
+
+            reason = f"Session #{idx}: \"{snippet}\"" if snippet else f"Session #{idx}: {len(t.messages)} messages exchanged"
+
+            all_sessions.append(FrustrationSession(
+                session_id=t.thread_id,
+                session_label=f"Session #{idx}",
+                timestamp=t.timestamp_start or "Historical",
+                frustration_score=score,
+                frustration_level=level,
+                summary_reason=reason
+            ))
+
+        # 2. Held Out Live Session
+        if held_out and held_out.messages:
+            idx = len(threads) + 1
+            text = " ".join([m.text for m in held_out.messages]).lower()
+            matches = sum(1 for kw in distress_keywords if kw in text)
+            
+            score = min(98, max(30, 35 + (idx * 16) + (matches * 14)))
+            if score >= 80:
+                level = "Critical"
+            elif score >= 60:
+                level = "High"
+            elif score >= 40:
+                level = "Medium"
+            else:
+                level = "Low"
+
+            cust_msgs = [m.text.replace("@AmazonHelp", "").strip() for m in held_out.messages if m.role == 'customer']
+            snippet = cust_msgs[0] if cust_msgs else ""
+            if len(snippet) > 55:
+                snippet = snippet[:52] + "..."
+
+            reason = f"Live Ticket: \"{snippet}\"" if snippet else f"Active interaction: {matches} frustration signals detected"
+
+            all_sessions.append(FrustrationSession(
+                session_id=held_out.thread_id or "thread_live",
+                session_label=f"Live Ticket (Turn #{idx})",
+                timestamp="Active",
+                frustration_score=score,
+                frustration_level=level,
+                summary_reason=reason
+            ))
+
+        if not all_sessions:
+            all_sessions.append(FrustrationSession(
+                session_id="thread_0",
+                session_label="Session #1",
+                timestamp="New Ticket",
+                frustration_score=25,
+                frustration_level="Low",
+                summary_reason="First contact inquiry"
+            ))
+
+        current_score = all_sessions[-1].frustration_score
+        current_level = all_sessions[-1].frustration_level
+
+        if len(all_sessions) >= 2:
+            first_score = all_sessions[0].frustration_score
+            if current_score - first_score >= 15:
+                overall_trend = "increasing"
+            elif first_score - current_score >= 15:
+                overall_trend = "decreasing"
+            else:
+                overall_trend = "stable"
+        else:
+            overall_trend = "stable"
+
+        return FrustrationTrajectory(
+            customer_id=customer.customer_id,
+            overall_trend=overall_trend,
+            current_frustration_score=current_score,
+            current_frustration_level=current_level,
+            sessions=all_sessions
+        )
+
+    def generate_action_recommendation(
+        self,
+        customer_id: str,
+        risk: RiskProfile,
+        trajectory: FrustrationTrajectory,
+        core_memory: Optional[List[str]] = None,
+        recalled_items: Optional[List[RecalledItem]] = None,
+        current_message: str = "",
+        customer: Optional[Customer] = None
+    ) -> AgentActionRecommendation:
+        """
+        Feature 2: Generates memory-grounded agent action recommendations tailored to customer issue.
+        """
+        # Collect customer text to determine specific issue topic
+        all_text_list = [current_message]
+        if customer:
+            for t in (customer.threads or []):
+                for m in t.messages:
+                    all_text_list.append(m.text)
+            if customer.held_out_thread:
+                for m in customer.held_out_thread.messages:
+                    all_text_list.append(m.text)
+        if core_memory:
+            all_text_list.extend(core_memory)
+        if recalled_items:
+            all_text_list.extend([r.summary for r in recalled_items])
+
+        all_text = " ".join(all_text_list).lower()
+
+        score = trajectory.current_frustration_score
+        level = trajectory.current_frustration_level
+        contacts = risk.contact_count_this_issue
+
+        # Dynamic Topic Classifier
+        if any(kw in all_text for kw in ["money", "refund", "get back", "cost", "charge", "credit", "return"]):
+            topic_category = "refund_delay"
+        elif any(kw in all_text for kw in ["tape", "prime", "packaging", "box", "package"]):
+            topic_category = "packaging_issue"
+        elif any(kw in all_text for kw in ["carrier", "closed", "delivered", "driver", "where is", "not arrived", "delay"]):
+            topic_category = "carrier_delivery"
+        elif any(kw in all_text for kw in ["email", "receive", "message", "receipt", "sent", "didn't receive"]):
+            topic_category = "email_notification"
+        elif any(kw in all_text for kw in ["effort", "everything", "rude", "again", "repeat", "verify"]):
+            topic_category = "repetition_effort"
+        else:
+            topic_category = "general_support"
+
+        if risk.risk_level == "escalate" or level in ["Critical", "High"] or contacts >= 3:
+            if topic_category == "refund_delay":
+                return AgentActionRecommendation(
+                    action_type="issue_goodwill",
+                    headline="🚨 Priority Refund Acceleration & Goodwill Credit",
+                    recommended_action=f"Expedite pending refund with billing department immediately and issue a $15 courtesy account credit prior to dispatching customer reply.",
+                    rationale=f"Customer has contacted support {contacts} times regarding refund delay with high frustration ({score}% distress score). Prompt financial resolution required.",
+                    confidence=0.94
+                )
+            elif topic_category == "packaging_issue":
+                return AgentActionRecommendation(
+                    action_type="escalate_manager",
+                    headline="🚨 Proactive Manager Escalation & Packaging Clarification",
+                    recommended_action=f"Escalate ticket to Senior Support Lead. Review non-member Prime tape packaging rules and issue a $15 courtesy credit.",
+                    rationale=f"Customer has contacted support {contacts} times with increasing frustration ({score}% score). Standard replies failed to clarify packaging policies.",
+                    confidence=0.94
+                )
+            elif topic_category == "carrier_delivery":
+                return AgentActionRecommendation(
+                    action_type="escalate_manager",
+                    headline="🚨 Proactive Carrier Escalation & Priority Redelivery",
+                    recommended_action=f"Contact carrier dispatch supervisor to override delivery failure status and schedule priority morning redelivery with direct tracking update.",
+                    rationale=f"Customer turn #{contacts} regarding carrier delivery failure ('carrier closed'). Proactive carrier dispatch required.",
+                    confidence=0.94
+                )
+            elif topic_category == "repetition_effort":
+                return AgentActionRecommendation(
+                    action_type="escalate_manager",
+                    headline="🚨 Supervisor Fast-Track & Courtesy Credit",
+                    recommended_action=f"Supervisor takeover: Bypass repetitive verification questions, take direct ownership, and apply a $15 goodwill credit.",
+                    rationale=f"Customer expressing severe frustration over repeat contacts ({contacts} turns, {score}% distress score) and perceived lack of resolution effort.",
+                    confidence=0.94
+                )
+            else:
+                return AgentActionRecommendation(
+                    action_type="escalate_manager",
+                    headline="🚨 Proactive Manager Escalation & Goodwill Resolution",
+                    recommended_action=f"Escalate ticket to Senior Support Lead immediately. Review previous {contacts} unresolved contacts and issue a $15 courtesy credit.",
+                    rationale=f"Customer has contacted support {contacts} times with high distress score ({score}%). Proactive resolution strongly advised.",
+                    confidence=0.94
+                )
+        elif risk.risk_level == "watch" or level == "Medium" or contacts == 2:
+            if topic_category == "email_notification":
+                return AgentActionRecommendation(
+                    action_type="verify_details",
+                    headline="⚠️ Immediate Email Resend & Delivery Verification",
+                    recommended_action="Resend order confirmation and tracking details directly to customer's verified email address and confirm receipt.",
+                    rationale=f"Customer is on contact turn #{contacts} regarding unreceived notification email ({score}% distress score). System email resend recommended.",
+                    confidence=0.88
+                )
+            elif topic_category == "refund_delay":
+                return AgentActionRecommendation(
+                    action_type="verify_details",
+                    headline="⚠️ Refund Processing Status Verification",
+                    recommended_action="Verify refund transaction status with accounting and communicate expected bank processing timeline (3-5 business days).",
+                    rationale=f"Customer is on contact turn #{contacts} inquiring on refund timeline ({score}% distress score). Clear timeline prevents escalation.",
+                    confidence=0.88
+                )
+            elif topic_category == "carrier_delivery":
+                return AgentActionRecommendation(
+                    action_type="verify_details",
+                    headline="⚠️ Priority Carrier Tracking Verification",
+                    recommended_action="Trace current package GPS coordinates with carrier and provide exact updated delivery window.",
+                    rationale=f"Customer on turn #{contacts} checking delayed shipment status. Clear tracking update calms frustration.",
+                    confidence=0.88
+                )
+            elif topic_category == "repetition_effort":
+                return AgentActionRecommendation(
+                    action_type="verify_details",
+                    headline="⚠️ Account Verification Fast-Track",
+                    recommended_action="Verify customer identity via order ID without repeating previously answered security questions.",
+                    rationale=f"Customer turn #{contacts} with medium frustration trajectory ({score}% score). Streamlining verification avoids escalation.",
+                    confidence=0.88
+                )
+            else:
+                return AgentActionRecommendation(
+                    action_type="verify_details",
+                    headline="⚠️ Priority Order Status & Issue Clarification",
+                    recommended_action="Re-verify shipment tracking status and provide direct issue resolution steps before closing.",
+                    rationale=f"Customer is on contact turn #{contacts} with medium frustration trajectory ({score}% score). Direct clarification prevents escalation.",
+                    confidence=0.88
+                )
+        else:
+            return AgentActionRecommendation(
+                action_type="standard_resolution",
+                headline="✅ Standard First-Contact Assistance",
+                recommended_action="Verify customer account ID and provide standard order status update.",
+                rationale="First-contact inquiry with normal sentiment trajectory and zero previous escalations.",
+                confidence=0.85
+            )
 
     def _simulated_reply(
         self,

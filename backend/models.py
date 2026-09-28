@@ -28,12 +28,21 @@ class HeldOutThread(BaseModel):
     messages: List[Message]
 
 
+class OrderDetails(BaseModel):
+    order_id: str
+    item_name: str
+    price: str
+    membership_tier: str = "Amazon Prime"
+    tracking_status: str
+
+
 class Customer(BaseModel):
     customer_id: str
     display_label: str
     brand_handle: str = "AmazonHelp"
     threads: List[Thread] = Field(default_factory=list)
     held_out_thread: Optional[HeldOutThread] = None
+    order_details: Optional[OrderDetails] = None
 
 
 # ---------------------------------------------------------
@@ -60,7 +69,40 @@ class RecalledItem(BaseModel):
 
 
 # ---------------------------------------------------------
-# API Request & Response Shapes (TRS §4)
+# Feature 1: Multi-Session Frustration Trajectory Schema
+# ---------------------------------------------------------
+
+class FrustrationSession(BaseModel):
+    session_id: str
+    session_label: str
+    timestamp: str
+    frustration_score: int  # 0 to 100 percentage
+    frustration_level: Literal["Low", "Medium", "High", "Critical"]
+    summary_reason: str
+
+
+class FrustrationTrajectory(BaseModel):
+    customer_id: str
+    overall_trend: Literal["increasing", "stable", "decreasing"]
+    current_frustration_score: int
+    current_frustration_level: Literal["Low", "Medium", "High", "Critical"]
+    sessions: List[FrustrationSession]
+
+
+# ---------------------------------------------------------
+# Feature 2: Memory-Grounded Support Action Recommendation Schema
+# ---------------------------------------------------------
+
+class AgentActionRecommendation(BaseModel):
+    action_type: Literal["escalate_manager", "issue_goodwill", "verify_details", "standard_resolution"]
+    headline: str
+    recommended_action: str
+    rationale: str
+    confidence: float
+
+
+# ---------------------------------------------------------
+# API Request & Response Shapes (TRS §4 Extended)
 # ---------------------------------------------------------
 
 class TicketSummary(BaseModel):
@@ -74,6 +116,8 @@ class TicketDetailResponse(BaseModel):
     customer: Customer
     threads: List[Thread]
     risk_profile: RiskProfile
+    frustration_trajectory: Optional[FrustrationTrajectory] = None
+    action_recommendation: Optional[AgentActionRecommendation] = None
 
 
 class MessageRequest(BaseModel):
@@ -84,12 +128,34 @@ class MessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     agent_response: str
     recalled_context: Optional[List[RecalledItem]] = None
+    action_recommendation: Optional[AgentActionRecommendation] = None
 
 
 class MemoryResponse(BaseModel):
     recalled_items: List[RecalledItem]
     risk_profile: RiskProfile
+    frustration_trajectory: Optional[FrustrationTrajectory] = None
+    action_recommendation: Optional[AgentActionRecommendation] = None
 
 
 class ResolveResponse(BaseModel):
     updated_risk_profile: RiskProfile
+    frustration_trajectory: Optional[FrustrationTrajectory] = None
+    action_recommendation: Optional[AgentActionRecommendation] = None
+
+
+# ---------------------------------------------------------
+# Core Memory / Pinned Customer Facts Schema (MemGPT Working Memory)
+# ---------------------------------------------------------
+
+class CoreMemoryFact(BaseModel):
+    id: str
+    text: str
+    category: str = "General"
+    timestamp: Optional[str] = None
+
+
+class CoreMemoryRequest(BaseModel):
+    text: str
+    category: str = "General"
+
