@@ -16,6 +16,66 @@ export default function App() {
   const [memoryLoading, setMemoryLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  // Dynamic Layout & Resizable Frames State (Fixed 70px Header, Mouse Drag Column & Middle Splitters)
+  const [queueWidth, setQueueWidth] = useState(320); // Width in px
+  const [memoryWidth, setMemoryWidth] = useState(360); // Width in px
+  const [threadHeightPercent, setThreadHeightPercent] = useState(55); // Height percentage of conversation vs composer
+  const [isResizingLeft, setIsResizingLeft] = useState(false);
+  const [isResizingRight, setIsResizingRight] = useState(false);
+  const [isResizingMiddle, setIsResizingMiddle] = useState(false);
+
+  const mainRef = useRef(null);
+
+  // Mouse Drag Handlers for Resizing Left Queue Frame
+  const handleMouseDownLeft = (e) => {
+    e.preventDefault();
+    setIsResizingLeft(true);
+  };
+
+  // Mouse Drag Handlers for Resizing Right Memory Frame
+  const handleMouseDownRight = (e) => {
+    e.preventDefault();
+    setIsResizingRight(true);
+  };
+
+  // Mouse Drag Handlers for Resizing Middle Vertical Frame
+  const handleMouseDownMiddle = (e) => {
+    e.preventDefault();
+    setIsResizingMiddle(true);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (isResizingLeft) {
+        const newWidth = Math.max(220, Math.min(500, e.clientX));
+        setQueueWidth(newWidth);
+      } else if (isResizingRight) {
+        const newWidth = Math.max(260, Math.min(550, window.innerWidth - e.clientX));
+        setMemoryWidth(newWidth);
+      } else if (isResizingMiddle && mainRef.current) {
+        const rect = mainRef.current.getBoundingClientRect();
+        const relativeY = e.clientY - rect.top;
+        const newPercent = Math.max(25, Math.min(75, (relativeY / rect.height) * 100));
+        setThreadHeightPercent(newPercent);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingLeft(false);
+      setIsResizingRight(false);
+      setIsResizingMiddle(false);
+    };
+
+    if (isResizingLeft || isResizingRight || isResizingMiddle) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingLeft, isResizingRight, isResizingMiddle]);
+
   // Client-side cache refs for instant switching and race condition handling
   const ticketCacheRef = useRef({});
   const memoryCacheRef = useRef({});
@@ -239,40 +299,45 @@ export default function App() {
     || "I am waiting for an update on my package.";
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 text-slate-900 font-sans antialiased">
-      {/* Top Navbar — Authentic Enterprise Branding Bar */}
-      <header className="h-14 border-b border-slate-200 bg-white px-5 flex items-center justify-between flex-shrink-0 shadow-sm z-10">
-        {/* Left: Official Amazon Customer Service Branding */}
-        <div className="flex items-center gap-3.5">
-          <div className="flex items-center gap-2">
-            <AmazonLogo className="h-5 w-auto" />
-            <span className="text-slate-300 font-light text-lg">|</span>
+    <div className="flex flex-col h-screen bg-slate-100 text-slate-900 font-sans antialiased overflow-hidden">
+      {/* Top Navbar — Prominent Authentic Amazon Customer Service Navigation Banner (Fixed 70px) */}
+      <header className="h-[70px] bg-[#131921] px-6 py-2.5 flex items-center justify-between flex-shrink-0 shadow-lg z-10 text-white border-b border-slate-800 select-none">
+        {/* Left: Official Amazon.in Customer Service Branding */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <AmazonLogo className="h-7 w-auto" dark={true} />
+            <span className="text-slate-600 font-light text-2xl">|</span>
             <div className="flex flex-col">
-              <span className="text-xs font-bold tracking-tight text-slate-900 uppercase">
-                Customer Support Desk
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium">
-                AmazonHelp Copilot Workbench
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold tracking-tight text-white font-sans">
+                  amazon customer service
+                </span>
+                <span className="text-[11px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded font-bold border border-amber-400/40">
+                  Rep Copilot Workbench
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-400 font-medium">
+                AmazonHelp Support Memory & Escalation Copilot System
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right: Official Enterprise Partner Badges */}
-        <div className="flex items-center gap-3 text-xs">
+        {/* Right: Partner Badges (Groq LPU + Hindsight Memory) */}
+        <div className="flex items-center gap-3.5 text-xs">
           {/* Groq Enterprise Inference Badge */}
-          <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-slate-50 border border-slate-200 text-slate-700 shadow-xs">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-800/90 border border-slate-700 text-slate-200 shadow-xs">
             <GroqLogo className="w-4 h-4" />
-            <span className="text-xs">
-              Fast Inference: <strong className="font-semibold text-slate-900">Groq LPU</strong>
+            <span className="text-[11px]">
+              Fast Inference: <strong className="font-semibold text-white">Groq LPU</strong>
             </span>
           </div>
 
           {/* Hindsight Persistent Memory System Badge */}
-          <div className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold border transition-colors shadow-xs ${
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] font-semibold border transition-colors shadow-xs ${
             memoryEnabled 
-              ? 'bg-emerald-50 text-emerald-900 border-emerald-300' 
-              : 'bg-slate-100 text-slate-600 border-slate-200'
+              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-600/60' 
+              : 'bg-slate-800 text-slate-400 border-slate-700'
           }`}>
             <HindsightLogo className="w-4 h-4" />
             <span>Hindsight Memory: {memoryEnabled ? 'Active' : 'Bypassed'}</span>
@@ -280,19 +345,31 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main 3-Column Split Pane */}
+      {/* Main 3-Column Split Pane with Draggable Column & Row Resizers */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Column: Ticket Queue */}
-        <TicketList
-          tickets={tickets}
-          selectedId={selectedId}
-          onSelectTicket={handleSelectTicket}
-          loading={loading}
-          onRefresh={fetchTickets}
-        />
+        {/* Left Column: Ticket Queue (Draggable Width) */}
+        <div style={{ width: `${queueWidth}px` }} className="flex-shrink-0 h-full flex flex-col transition-all duration-75">
+          <TicketList
+            tickets={tickets}
+            selectedId={selectedId}
+            onSelectTicket={handleSelectTicket}
+            loading={loading}
+            onRefresh={fetchTickets}
+            widthClass="w-full"
+          />
+        </div>
 
-        {/* Center Column: Active Conversation & Reply Generator */}
-        <main className="flex-1 flex flex-col bg-slate-50 overflow-hidden border-r border-slate-200">
+        {/* Draggable Column Splitter Handle 1 (Queue / Conversation) */}
+        <div 
+          onMouseDown={handleMouseDownLeft}
+          title="Click and drag left/right to resize Ticket Queue column"
+          className="w-2 hover:w-2.5 bg-slate-300 hover:bg-amber-500 cursor-col-resize transition-all flex items-center justify-center flex-shrink-0 select-none z-20 group"
+        >
+          <div className="h-8 w-1 bg-slate-400 group-hover:bg-white rounded-full" />
+        </div>
+
+        {/* Center Column: Active Conversation & Reply Generator with Vertical Frame Resizer */}
+        <main ref={mainRef} className="flex-1 flex flex-col bg-slate-50 overflow-hidden border-r border-slate-200 min-w-[320px]">
           {ticketDetail ? (
             <>
               {/* Proactive Escalation Banner (SRS FR-9) */}
@@ -301,23 +378,38 @@ export default function App() {
                 memoryEnabled={memoryEnabled} 
               />
 
-              {/* Conversation History & Incoming Ticket */}
-              <ConversationThread
-                customer={ticketDetail.customer}
-                threads={ticketDetail.threads}
-                heldOutThread={ticketDetail.customer?.held_out_thread}
-              />
+              {/* Upper Middle Frame: Conversation Thread (Resizable Height) */}
+              <div style={{ height: `${threadHeightPercent}%` }} className="flex flex-col overflow-hidden flex-shrink-0">
+                <ConversationThread
+                  customer={ticketDetail.customer}
+                  threads={ticketDetail.threads}
+                  heldOutThread={ticketDetail.customer?.held_out_thread}
+                />
+              </div>
 
-              {/* Reply Drafting Composer with Memory Toggle */}
-              <ResponseGenerator
-                customerId={selectedId}
-                incomingMessage={currentIncomingMsg}
-                memoryEnabled={memoryEnabled}
-                onToggleMemory={() => setMemoryEnabled(!memoryEnabled)}
-                onGenerateResponse={handleGenerateResponse}
-                generating={generating}
-                onMessageSent={handleSendMessage}
-              />
+              {/* Draggable Row Splitter Handle (Middle Frame Top/Bottom Resizer) */}
+              <div 
+                onMouseDown={handleMouseDownMiddle}
+                title="Click and drag up/down to resize Conversation vs Reply Composer frame"
+                className="h-2.5 hover:h-3 bg-slate-200 hover:bg-amber-400 cursor-row-resize transition-all flex items-center justify-center flex-shrink-0 select-none border-y border-slate-300 z-20 group"
+              >
+                <div className="w-16 h-1 bg-slate-400 group-hover:bg-slate-900 rounded-full flex items-center justify-center">
+                  <div className="w-6 h-0.5 bg-white/80 rounded-full" />
+                </div>
+              </div>
+
+              {/* Lower Middle Frame: Reply Drafting Composer */}
+              <div className="flex-1 overflow-y-auto flex flex-col min-h-[160px]">
+                <ResponseGenerator
+                  customerId={selectedId}
+                  incomingMessage={currentIncomingMsg}
+                  memoryEnabled={memoryEnabled}
+                  onToggleMemory={() => setMemoryEnabled(!memoryEnabled)}
+                  onGenerateResponse={handleGenerateResponse}
+                  generating={generating}
+                  onMessageSent={handleSendMessage}
+                />
+              </div>
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-sm gap-2">
@@ -327,15 +419,28 @@ export default function App() {
           )}
         </main>
 
-        {/* Right Column: Live Agent Memory Panel */}
-        <AgentMemoryPanel
-          customerId={selectedId}
-          memoryEnabled={memoryEnabled}
-          recalledItems={recalledItems}
-          riskProfile={ticketDetail?.risk_profile}
-          onResolveTicket={handleResolveTicket}
-          memoryLoading={memoryLoading}
-        />
+        {/* Draggable Column Splitter Handle 2 (Conversation / Memory Panel) */}
+        <div 
+          onMouseDown={handleMouseDownRight}
+          title="Click and drag left/right to resize Memory Panel column"
+          className="w-2 hover:w-2.5 bg-slate-300 hover:bg-amber-500 cursor-col-resize transition-all flex items-center justify-center flex-shrink-0 select-none z-20 group"
+        >
+          <div className="h-8 w-1 bg-slate-400 group-hover:bg-white rounded-full" />
+        </div>
+
+        {/* Right Column: Live Agent Memory Panel (Draggable Width) */}
+        <div style={{ width: `${memoryWidth}px` }} className="flex-shrink-0 h-full flex flex-col transition-all duration-75">
+          <AgentMemoryPanel
+            customerId={selectedId}
+            memoryEnabled={memoryEnabled}
+            recalledItems={recalledItems}
+            riskProfile={ticketDetail?.risk_profile}
+            frustrationTrajectory={ticketDetail?.frustration_trajectory}
+            actionRecommendation={ticketDetail?.action_recommendation}
+            onResolveTicket={handleResolveTicket}
+            memoryLoading={memoryLoading}
+          />
+        </div>
       </div>
     </div>
   );

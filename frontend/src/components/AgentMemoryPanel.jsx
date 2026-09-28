@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Activity, CheckSquare, Loader2, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Activity, CheckSquare, Loader2, Sparkles, Pin, Plus, Trash2, Bookmark, TrendingUp, Zap, ShieldAlert, ArrowRight, CornerDownRight } from 'lucide-react';
 import { HindsightLogo } from './BrandLogos';
 
 export default function AgentMemoryPanel({ 
@@ -7,11 +7,72 @@ export default function AgentMemoryPanel({
   memoryEnabled, 
   recalledItems, 
   riskProfile, 
+  frustrationTrajectory,
+  actionRecommendation,
   onResolveTicket,
   memoryLoading = false
 }) {
   const [resolving, setResolving] = useState(false);
   const [resolveSuccess, setResolveSuccess] = useState(false);
+
+  // MemGPT Core Memory Buffer State
+  const [coreFacts, setCoreFacts] = useState([]);
+  const [showAddFact, setShowAddFact] = useState(false);
+  const [newFactText, setNewFactText] = useState('');
+  const [newFactCategory, setNewFactCategory] = useState('Preference');
+  const [addingFact, setAddingFact] = useState(false);
+
+  // Modernization Upgrade 1: Neural Memory Timeline View Mode State
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'graph'
+
+  // Fetch Core Memory Pinned Facts when customer changes
+  useEffect(() => {
+    if (!customerId) return;
+    fetch(`/api/tickets/${customerId}/core-memory`)
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setCoreFacts(data))
+      .catch(err => console.error("Error fetching core memory:", err));
+  }, [customerId]);
+
+  const handleAddFact = async (textToAdd = null, catToAdd = null) => {
+    const text = textToAdd || newFactText.trim();
+    const category = catToAdd || newFactCategory;
+    if (!text || !customerId) return;
+
+    setAddingFact(true);
+    try {
+      const res = await fetch(`/api/tickets/${customerId}/core-memory`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, category })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setCoreFacts(updated);
+        setNewFactText('');
+        setShowAddFact(false);
+      }
+    } catch (err) {
+      console.error("Error adding core memory fact:", err);
+    } finally {
+      setAddingFact(false);
+    }
+  };
+
+  const handleDeleteFact = async (factId) => {
+    if (!customerId || !factId) return;
+    try {
+      const res = await fetch(`/api/tickets/${customerId}/core-memory/${factId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setCoreFacts(updated);
+      }
+    } catch (err) {
+      console.error("Error deleting core memory fact:", err);
+    }
+  };
 
   const handleResolve = async () => {
     setResolving(true);
@@ -28,7 +89,7 @@ export default function AgentMemoryPanel({
 
   if (!memoryEnabled) {
     return (
-      <div className="w-[360px] flex-shrink-0 bg-white border-l border-slate-200 p-6 flex flex-col items-center justify-center text-center text-slate-500">
+      <div className="w-full h-full bg-white border-l border-slate-200 p-6 flex flex-col items-center justify-center text-center text-slate-500 overflow-y-auto">
         <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mb-3 border border-slate-200">
           <HindsightLogo className="w-6 h-6 opacity-40" />
         </div>
@@ -43,7 +104,7 @@ export default function AgentMemoryPanel({
   const confidencePct = Math.round((riskProfile?.confidence || 0.8) * 100);
 
   return (
-    <div className="w-[360px] flex-shrink-0 bg-white border-l border-slate-200 flex flex-col h-full">
+    <div className="w-full bg-white border-l border-slate-200 flex flex-col h-full overflow-hidden">
       {/* Header with Authentic Hindsight Enterprise Logo */}
       <div className="p-3.5 border-b border-slate-200 flex items-center justify-between gap-3 bg-white">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -69,14 +130,258 @@ export default function AgentMemoryPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
+        {/* Feature 2: Memory-Grounded Support Action Recommendation Card */}
+        {actionRecommendation && (
+          <div className="bg-red-50/90 border border-red-300 rounded-lg p-3.5 space-y-2.5 shadow-xs animate-fade-in">
+            <div className="flex items-center justify-between border-b border-red-200 pb-2">
+              <div className="flex items-center gap-1.5">
+                <Zap className="w-4 h-4 text-red-600 fill-red-500 animate-pulse" />
+                <span className="text-xs font-bold text-red-950 uppercase tracking-wide">
+                  Support Action Recommendation
+                </span>
+              </div>
+              <span className="text-[10px] bg-red-200 text-red-950 font-bold px-2 py-0.5 rounded font-mono">
+                {Math.round((actionRecommendation.confidence || 0.94) * 100)}% Match
+              </span>
+            </div>
+
+            <div className="text-xs font-bold text-red-900 leading-snug">
+              {actionRecommendation.headline}
+            </div>
+
+            {/* Recommended Agent Action (What to do next) */}
+            <div className="bg-white border border-red-200 rounded-md p-2.5 space-y-1 text-xs shadow-2xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-red-800 flex items-center gap-1">
+                <CornerDownRight className="w-3 h-3 text-red-600" />
+                Recommended Next Agent Action:
+              </span>
+              <p className="font-bold text-slate-900 leading-relaxed">
+                {actionRecommendation.recommended_action}
+              </p>
+            </div>
+
+            {/* Memory Rationale */}
+            <div className="bg-red-100/50 border border-red-200 rounded-md p-2 text-[11px] text-slate-800 space-y-0.5">
+              <span className="text-[10px] font-bold text-red-900 uppercase tracking-wider block">
+                💡 Memory & Frustration Rationale:
+              </span>
+              <p className="leading-relaxed font-normal">{actionRecommendation.rationale}</p>
+            </div>
+
+            <span className="text-[10px] text-slate-500 italic block pt-0.5">
+              ℹ️ Support representative retains full control. Action recommendation is advisory prior to dispatching reply.
+            </span>
+          </div>
+        )}
+
+        {/* Feature 1: Multi-Session Frustration Trajectory Card */}
+        {frustrationTrajectory && (
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
+                Multi-Session Frustration Trajectory
+              </span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                frustrationTrajectory.overall_trend === 'increasing'
+                  ? 'bg-red-100 text-red-800 border-red-300'
+                  : frustrationTrajectory.overall_trend === 'decreasing'
+                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                  : 'bg-amber-100 text-amber-800 border-amber-300'
+              }`}>
+                {frustrationTrajectory.overall_trend === 'increasing' ? '📈 Increasing Frustration' :
+                 frustrationTrajectory.overall_trend === 'decreasing' ? '📉 Decreasing Frustration' : '➡️ Stable Frustration'}
+              </span>
+            </div>
+
+            {/* Overall Frustration Meter */}
+            <div className="bg-white p-2.5 rounded-md border border-slate-200 shadow-xs space-y-1.5 text-xs">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-600 font-medium">Current Frustration Level:</span>
+                <span className={`font-bold uppercase ${
+                  frustrationTrajectory.current_frustration_level === 'Critical' ? 'text-red-700' :
+                  frustrationTrajectory.current_frustration_level === 'High' ? 'text-amber-700' : 'text-slate-900'
+                }`}>
+                  {frustrationTrajectory.current_frustration_level} ({frustrationTrajectory.current_frustration_score}%)
+                </span>
+              </div>
+              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    frustrationTrajectory.current_frustration_score >= 80 ? 'bg-red-600' :
+                    frustrationTrajectory.current_frustration_score >= 60 ? 'bg-amber-500' : 'bg-emerald-500'
+                  }`} 
+                  style={{ width: `${frustrationTrajectory.current_frustration_score}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Step-by-Step Session Progression Timeline */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                Session Progression History:
+              </span>
+              <div className="flex items-center gap-1.5 overflow-x-auto py-1 custom-scrollbar">
+                {frustrationTrajectory.sessions?.map((s, idx) => (
+                  <React.Fragment key={s.session_id}>
+                    <div 
+                      title={s.summary_reason}
+                      className={`p-2 rounded-md border text-center flex-shrink-0 min-w-[95px] shadow-2xs ${
+                        s.frustration_level === 'Critical' ? 'bg-red-50 text-red-950 border-red-300' :
+                        s.frustration_level === 'High' ? 'bg-amber-50 text-amber-950 border-amber-300' :
+                        s.frustration_level === 'Medium' ? 'bg-yellow-50 text-yellow-950 border-yellow-300' :
+                        'bg-emerald-50 text-emerald-950 border-emerald-300'
+                      }`}
+                    >
+                      <div className="text-[10px] font-bold text-slate-800 truncate">{s.session_label}</div>
+                      <div className="text-xs font-extrabold font-mono mt-0.5">{s.frustration_score}%</div>
+                      <div className="text-[9px] font-semibold uppercase opacity-80">{s.frustration_level}</div>
+                    </div>
+                    {idx < frustrationTrajectory.sessions.length - 1 && (
+                      <ArrowRight className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MemGPT Core Memory Buffer (Working Memory Pinned Facts) Card */}
+        <div className="bg-amber-50/90 border border-amber-300 rounded-lg p-3.5 space-y-2.5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Pin className="w-3.5 h-3.5 text-amber-700 fill-amber-500" />
+              <span className="text-xs font-bold text-amber-950 uppercase tracking-wide">
+                Core Memory Buffer
+              </span>
+              <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-1.5 py-0.5 rounded font-mono">
+                MemGPT Working Memory
+              </span>
+            </div>
+            <button
+              onClick={() => setShowAddFact(!showAddFact)}
+              className="text-[11px] font-bold text-amber-900 hover:text-amber-950 bg-amber-200/80 hover:bg-amber-300 px-2 py-0.5 rounded flex items-center gap-1 transition"
+            >
+              <Plus className="w-3 h-3" />
+              <span>{showAddFact ? 'Cancel' : 'Pin Fact'}</span>
+            </button>
+          </div>
+
+          <p className="text-[11px] text-amber-850 leading-tight">
+            High-priority customer constraints pinned directly into LLM copilot prompt header:
+          </p>
+
+          {/* Fact Tags List */}
+          <div className="space-y-1.5 pt-1">
+            {coreFacts.length === 0 ? (
+              <span className="text-[11px] text-amber-700 italic block">No core facts pinned yet. Click 'Pin Fact' to add custom constraints.</span>
+            ) : (
+              coreFacts.map(fact => (
+                <div 
+                  key={fact.id}
+                  className="bg-white border border-amber-300 rounded p-2 flex items-start justify-between gap-2 shadow-2xs group"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded border border-amber-300">
+                        {fact.category || 'Constraint'}
+                      </span>
+                      {fact.timestamp && <span className="text-[9px] text-slate-400 font-mono">{fact.timestamp}</span>}
+                    </div>
+                    <p className="text-xs font-medium text-slate-900 leading-snug">{fact.text}</p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteFact(fact.id)}
+                    className="text-slate-400 hover:text-red-600 p-0.5 transition"
+                    title="Unpin fact from Core Memory"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Add Fact Form */}
+          {showAddFact && (
+            <div className="pt-2 border-t border-amber-200/90 space-y-2 animate-fade-in">
+              <input
+                type="text"
+                placeholder="Enter customer preference or constraint..."
+                value={newFactText}
+                onChange={(e) => setNewFactText(e.target.value)}
+                className="w-full bg-white border border-amber-300 rounded px-2.5 py-1 text-xs text-slate-900 placeholder-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-500 font-sans"
+              />
+              
+              <div className="flex items-center justify-between gap-2">
+                <select
+                  value={newFactCategory}
+                  onChange={(e) => setNewFactCategory(e.target.value)}
+                  className="bg-white text-xs text-slate-800 border border-amber-300 rounded px-2 py-0.5 focus:outline-none"
+                >
+                  <option value="Preference">Preference</option>
+                  <option value="Packaging Issue">Packaging Issue</option>
+                  <option value="Escalation Risk">Escalation Risk</option>
+                  <option value="Service Quality">Service Quality</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddFact()}
+                  disabled={addingFact || !newFactText.trim()}
+                  className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] rounded transition shadow-2xs disabled:opacity-50"
+                >
+                  {addingFact ? 'Pinning...' : 'Save to Core Memory'}
+                </button>
+              </div>
+
+              {/* Quick Preset Pills */}
+              <div className="pt-1 flex flex-wrap gap-1 text-[10px]">
+                <span className="text-amber-800 font-semibold self-center mr-1">Quick Presets:</span>
+                <button
+                  type="button"
+                  onClick={() => handleAddFact("Prime Tape Packaging Confusion", "Packaging Issue")}
+                  className="bg-white border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded hover:bg-amber-100 font-medium"
+                >
+                  📦 Tape Confusion
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddFact("4 Contact Turns Without Resolution", "Escalation Risk")}
+                  className="bg-white border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded hover:bg-amber-100 font-medium"
+                >
+                  🚨 4 Escalations
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddFact("Prefers Email Notifications", "Preference")}
+                  className="bg-white border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded hover:bg-amber-100 font-medium"
+                >
+                  💬 Email Preference
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
         {/* Customer Effort Trajectory & Opinion Card (Master Prompt §4) */}
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 space-y-3 shadow-xs">
+        <div className={`border rounded-lg p-3.5 space-y-3 shadow-xs transition-all duration-500 ${
+          resolveSuccess 
+            ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-400 shadow-md animate-pulse' 
+            : 'bg-slate-50 border-slate-200'
+        }`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-amber-600" />
               Customer Effort Trajectory
             </span>
-            <span className="text-[10px] text-slate-500 font-mono">Hindsight Opinion</span>
+            {resolveSuccess ? (
+              <span className="text-[10px] text-emerald-800 font-bold bg-emerald-200/80 px-2 py-0.5 rounded animate-bounce">
+                ✨ Reflected in Hindsight
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-500 font-mono">Hindsight Opinion</span>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
@@ -92,6 +397,22 @@ export default function AgentMemoryPanel({
                 riskProfile?.sentiment_trend === 'declining' ? 'text-red-700' : 'text-emerald-700'
               }`}>
                 {riskProfile?.sentiment_trend || 'stable'}
+              </span>
+            </div>
+          </div>
+
+          {/* Function 3: Customer Distress & Churn Risk Gauge */}
+          <div className="bg-white p-2.5 rounded-md border border-slate-200 shadow-xs space-y-1.5 text-xs">
+            <div className="flex justify-between items-center text-[11px]">
+              <span className="text-slate-500 font-medium">Customer Frustration Index:</span>
+              <span className={`font-bold ${riskProfile?.sentiment_trend === 'declining' ? 'text-red-700' : 'text-emerald-700'}`}>
+                {riskProfile?.sentiment_trend === 'declining' ? '88% (High Frustration)' : '24% (Low Frustration)'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-[11px]">
+              <span className="text-slate-500 font-medium">Recommended Tone:</span>
+              <span className="font-semibold text-slate-900">
+                {riskProfile?.sentiment_trend === 'declining' ? 'Empathetic & Direct Action' : 'Helpful & Standard'}
               </span>
             </div>
           </div>
@@ -124,7 +445,7 @@ export default function AgentMemoryPanel({
           </div>
         </div>
 
-        {/* Recalled Memory Insights (SRS FR-6) */}
+        {/* Recalled Memory Insights Header (SRS FR-6) */}
         <div>
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-amber-600" />

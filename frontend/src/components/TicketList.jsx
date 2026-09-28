@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { AlertCircle, AlertTriangle, CheckCircle, Search, RefreshCw } from 'lucide-react';
 
-export default function TicketList({ tickets, selectedId, onSelectTicket, loading, onRefresh }) {
+export default function TicketList({ tickets, selectedId, onSelectTicket, loading, onRefresh, widthClass = "w-80" }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
 
-  const filteredTickets = tickets.filter(t => 
-    t.display_label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.last_message_preview.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTickets = tickets.filter(t => {
+    const matchesSearch = !searchTerm || 
+      t.display_label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.last_message_preview.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.customer_id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRisk = selectedFilter === 'all' || t.risk_level === selectedFilter;
+    return matchesSearch && matchesRisk;
+  });
 
   const getRiskBadge = (level) => {
     switch (level) {
@@ -36,12 +41,12 @@ export default function TicketList({ tickets, selectedId, onSelectTicket, loadin
   };
 
   return (
-    <div className="w-80 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col h-full">
+    <div className={`${widthClass} transition-all duration-300 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col h-full`}>
       {/* Header */}
       <div className="p-3.5 border-b border-slate-200 flex items-center justify-between bg-white">
         <div>
           <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Ticket Queue</h2>
-          <p className="text-xs text-slate-500">AmazonHelp ({tickets.length} cases)</p>
+          <p className="text-xs text-slate-500">AmazonHelp ({filteredTickets.length} cases)</p>
         </div>
         <button 
           onClick={onRefresh} 
@@ -52,8 +57,8 @@ export default function TicketList({ tickets, selectedId, onSelectTicket, loadin
         </button>
       </div>
 
-      {/* Search Filter */}
-      <div className="p-2.5 border-b border-slate-200 bg-slate-50/60">
+      {/* Search & Scenario Preset Filters */}
+      <div className="p-2.5 border-b border-slate-200 bg-slate-50/60 flex flex-col gap-2">
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
           <input 
@@ -63,6 +68,27 @@ export default function TicketList({ tickets, selectedId, onSelectTicket, loadin
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-white border border-slate-300 rounded-md pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
           />
+        </div>
+
+        {/* Demo Scenario Presets */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-0.5 text-[11px]">
+          {['all', 'escalate', 'watch', 'normal'].map((filterType) => {
+            const active = selectedFilter === filterType;
+            const labels = { all: 'All Cases', escalate: 'Escalate', watch: 'Watch', normal: 'Normal' };
+            return (
+              <button
+                key={filterType}
+                onClick={() => setSelectedFilter(filterType)}
+                className={`px-2 py-0.5 rounded-full font-medium whitespace-nowrap transition-all ${
+                  active 
+                    ? 'bg-slate-900 text-white font-semibold shadow-xs' 
+                    : 'bg-slate-200/70 text-slate-600 hover:bg-slate-300/80'
+                }`}
+              >
+                {labels[filterType]}
+              </button>
+            );
+          })}
         </div>
       </div>
 

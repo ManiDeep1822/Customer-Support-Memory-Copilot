@@ -4,6 +4,7 @@ import { AmazonEmblem, CustomerAvatar } from './BrandLogos';
 
 export default function ConversationThread({ customer, threads, heldOutThread }) {
   const [expandedThreads, setExpandedThreads] = useState({});
+  const [threadSearchTerm, setThreadSearchTerm] = useState('');
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -19,13 +20,16 @@ export default function ConversationThread({ customer, threads, heldOutThread })
 
   const renderMessageCard = (msg, index, isCurrent = false) => {
     const isCustomer = msg.role === 'customer';
+    const isMatched = threadSearchTerm && msg.text.toLowerCase().includes(threadSearchTerm.toLowerCase());
     return (
       <div 
         key={index} 
         className={`w-full rounded-lg p-4 transition-all ${
-          isCustomer 
-            ? (isCurrent ? 'bg-white border-2 border-amber-300 shadow-sm' : 'bg-white border border-slate-200 shadow-xs')
-            : 'bg-amber-50/50 border border-amber-200 shadow-xs'
+          isMatched
+            ? 'bg-amber-100/90 border-2 border-amber-500 shadow-md ring-2 ring-amber-400'
+            : isCustomer 
+              ? (isCurrent ? 'bg-white border-2 border-amber-300 shadow-sm' : 'bg-white border border-slate-200 shadow-xs')
+              : 'bg-amber-50/50 border border-amber-200 shadow-xs'
         }`}
       >
         {/* Transcript Message Header with Authentic Enterprise Logos */}
@@ -64,7 +68,81 @@ export default function ConversationThread({ customer, threads, heldOutThread })
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-slate-50">
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-5 bg-slate-50 relative">
+      {/* Scroll Affordance Badge & Past Thread Keyword Search */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 bg-white/90 backdrop-blur-xs p-2 rounded-lg border border-slate-200/90 shadow-2xs font-mono">
+        <span className="flex items-center gap-1 font-semibold text-slate-600">
+          ↕ Scrollable Conversation Workspace ({threads?.length || 0} historical threads + active ticket)
+        </span>
+
+        {/* Live Past Thread Keyword Search */}
+        <div className="flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
+          <span className="text-[11px]">🔍</span>
+          <input
+            type="text"
+            placeholder="Search past threads..."
+            value={threadSearchTerm}
+            onChange={(e) => setThreadSearchTerm(e.target.value)}
+            className="bg-transparent text-[11px] text-slate-900 placeholder-slate-400 focus:outline-none w-36 font-sans font-medium"
+          />
+          {threadSearchTerm && (
+            <button onClick={() => setThreadSearchTerm('')} className="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+          )}
+        </div>
+      </div>
+
+      {/* Function 2: Live Order & Delivery Context Card */}
+      {(() => {
+        const order = customer?.order_details || {
+          order_id: `302-${customer?.customer_id ? customer.customer_id.replace('cust_', '') : '8819'}-4471`,
+          item_name: 'Wireless Noise-Canceling Headset (Black)',
+          price: '$149.99',
+          membership_tier: 'Amazon Prime',
+          tracking_status: 'Out for Delivery (Delayed - 3 Days Past SLA)'
+        };
+        const isDelayed = order.tracking_status.includes('Delay') || order.tracking_status.includes('Damaged') || order.tracking_status.includes('Pending') || order.tracking_status.includes('Inquiry');
+        const isDelivered = order.tracking_status.includes('Delivered') && !isDelayed;
+
+        return (
+          <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs">
+                📦 Order Details
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900">
+                    Order #{order.order_id}
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                    order.membership_tier === 'Amazon Prime' 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : 'bg-slate-100 text-slate-700 border border-slate-200'
+                  }`}>
+                    {order.membership_tier}
+                  </span>
+                </div>
+                <p className="text-slate-500 text-[11px] mt-0.5">
+                  Item: {order.item_name} • {order.price}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-[11px]">
+              <span className="text-slate-500 font-medium">Tracking Status:</span>
+              <span className={`px-2.5 py-1 rounded-md font-semibold ${
+                isDelayed
+                  ? 'bg-red-50 text-red-700 border border-red-200'
+                  : isDelivered
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-amber-50 text-amber-800 border border-amber-200'
+              }`}>
+                {order.tracking_status}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Historical Threads Section */}
       {threads && threads.length > 0 && (
         <div className="space-y-3">
