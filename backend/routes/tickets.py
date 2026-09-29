@@ -218,7 +218,8 @@ async def get_ticket_detail(customer_id: str):
         customer_id=customer_id,
         risk=risk,
         trajectory=trajectory,
-        core_memory=core_facts
+        core_memory=core_facts,
+        customer=cust
     )
 
     return TicketDetailResponse(
@@ -263,7 +264,8 @@ async def handle_ticket_message(customer_id: str, payload: MessageRequest):
         trajectory=trajectory,
         core_memory=core_facts,
         recalled_items=recalled_context,
-        current_message=payload.text
+        current_message=payload.text,
+        customer=cust
     )
 
     # FR-12: Retain new live message into Hindsight in real time (in background)
@@ -345,7 +347,8 @@ async def get_ticket_memory(customer_id: str):
         trajectory=trajectory,
         core_memory=core_facts,
         recalled_items=recalled_items,
-        current_message=query
+        current_message=query,
+        customer=cust
     )
 
     return MemoryResponse(
@@ -398,6 +401,18 @@ async def resolve_ticket(customer_id: str):
 
     _RISK_CACHE[customer_id] = updated_risk
 
+    trajectory = llm_service.compute_frustration_trajectory(cust)
+    core_facts = [f.text for f in _CORE_MEMORY_CACHE.get(customer_id, [])]
+    recommendation = llm_service.generate_action_recommendation(
+        customer_id=customer_id,
+        risk=updated_risk,
+        trajectory=trajectory,
+        core_memory=core_facts,
+        customer=cust
+    )
+
     return ResolveResponse(
-        updated_risk_profile=updated_risk
+        updated_risk_profile=updated_risk,
+        frustration_trajectory=trajectory,
+        action_recommendation=recommendation
     )

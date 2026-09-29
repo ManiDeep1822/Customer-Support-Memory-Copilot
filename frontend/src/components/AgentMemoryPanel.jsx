@@ -1,5 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, CheckSquare, Loader2, Sparkles, Pin, Plus, Trash2, Bookmark, TrendingUp, Zap, ShieldAlert, ArrowRight, CornerDownRight } from 'lucide-react';
+import { 
+  Activity, 
+  CheckSquare, 
+  Loader2, 
+  Sparkles, 
+  Pin, 
+  Plus, 
+  Trash2, 
+  TrendingUp, 
+  TrendingDown, 
+  Minus, 
+  Zap, 
+  ArrowRight, 
+  CornerDownRight,
+  Lightbulb,
+  Info,
+  Package,
+  AlertTriangle,
+  Mail,
+  CheckCircle2
+} from 'lucide-react';
 import { HindsightLogo } from './BrandLogos';
 
 export default function AgentMemoryPanel({ 
@@ -22,8 +42,6 @@ export default function AgentMemoryPanel({
   const [newFactCategory, setNewFactCategory] = useState('Preference');
   const [addingFact, setAddingFact] = useState(false);
 
-  // Modernization Upgrade 1: Neural Memory Timeline View Mode State
-  const [viewMode, setViewMode] = useState('list'); // 'list' | 'graph'
 
   // Fetch Core Memory Pinned Facts when customer changes
   useEffect(() => {
@@ -104,9 +122,9 @@ export default function AgentMemoryPanel({
   const confidencePct = Math.round((riskProfile?.confidence || 0.8) * 100);
 
   return (
-    <div className="w-full bg-white border-l border-slate-200 flex flex-col h-full overflow-hidden">
-      {/* Header with Authentic Hindsight Enterprise Logo */}
-      <div className="p-3.5 border-b border-slate-200 flex items-center justify-between gap-3 bg-white">
+    <div className="w-full bg-white flex flex-col h-full overflow-hidden">
+      {/* Header with Authentic Hindsight Enterprise Logo — Fixed Navbar */}
+      <div className="p-3.5 border-b border-slate-200 flex items-center justify-between gap-3 bg-white flex-shrink-0 sticky top-0 z-10">
         <div className="flex items-center gap-2.5 min-w-0">
           <HindsightLogo className="w-5 h-5 shadow-xs flex-shrink-0" />
           <div className="min-w-0">
@@ -129,68 +147,106 @@ export default function AgentMemoryPanel({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-4 min-h-0">
         {/* Feature 2: Memory-Grounded Support Action Recommendation Card */}
-        {actionRecommendation && (
-          <div className="bg-red-50/90 border border-red-300 rounded-lg p-3.5 space-y-2.5 shadow-xs animate-fade-in">
-            <div className="flex items-center justify-between border-b border-red-200 pb-2">
-              <div className="flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-red-600 fill-red-500 animate-pulse" />
-                <span className="text-xs font-bold text-red-950 uppercase tracking-wide">
-                  Support Action Recommendation
+        {actionRecommendation && (() => {
+          const isEscalate = actionRecommendation.action_type === 'escalate_manager' || actionRecommendation.action_type === 'issue_goodwill';
+          const isWatch = actionRecommendation.action_type === 'verify_details';
+
+          const cardStyle = isEscalate 
+            ? 'bg-red-50/90 border-red-300' 
+            : isWatch 
+            ? 'bg-amber-50/90 border-amber-300' 
+            : 'bg-emerald-50/90 border-emerald-300';
+
+          const headerBorder = isEscalate ? 'border-red-200' : isWatch ? 'border-amber-200' : 'border-emerald-200';
+          const iconColor = isEscalate ? 'text-red-600 fill-red-500' : isWatch ? 'text-amber-600 fill-amber-500' : 'text-emerald-600 fill-emerald-500';
+          const titleColor = isEscalate ? 'text-red-950' : isWatch ? 'text-amber-950' : 'text-emerald-950';
+          const matchBadge = isEscalate ? 'bg-red-200 text-red-950' : isWatch ? 'bg-amber-200 text-amber-950' : 'bg-emerald-200 text-emerald-950';
+          const headlineColor = isEscalate ? 'text-red-900' : isWatch ? 'text-amber-900' : 'text-emerald-900';
+          const actionBoxBorder = isEscalate ? 'border-red-200' : isWatch ? 'border-amber-200' : 'border-emerald-200';
+          const actionLabelColor = isEscalate ? 'text-red-800' : isWatch ? 'text-amber-800' : 'text-emerald-800';
+          const actionIconColor = isEscalate ? 'text-red-600' : isWatch ? 'text-amber-600' : 'text-emerald-600';
+          const rationaleBg = isEscalate ? 'bg-red-100/50 border-red-200' : isWatch ? 'bg-amber-100/50 border-amber-200' : 'bg-emerald-100/50 border-emerald-200';
+          const rationaleTitle = isEscalate ? 'text-red-900' : isWatch ? 'text-amber-900' : 'text-emerald-900';
+
+          return (
+            <div className={`${cardStyle} border rounded-lg p-3.5 space-y-2.5 shadow-xs animate-fade-in`}>
+              <div className={`flex items-center justify-between border-b ${headerBorder} pb-2 gap-2`}>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Zap className={`w-3.5 h-3.5 ${iconColor} flex-shrink-0 animate-pulse`} />
+                  <span className={`text-xs font-bold ${titleColor} uppercase tracking-wide truncate`}>
+                    Action Recommendation
+                  </span>
+                </div>
+                <span className={`text-[10px] ${matchBadge} font-bold px-2 py-0.5 rounded font-mono whitespace-nowrap flex-shrink-0`}>
+                  {Math.round((actionRecommendation.confidence || 0.94) * 100)}% Match
                 </span>
               </div>
-              <span className="text-[10px] bg-red-200 text-red-950 font-bold px-2 py-0.5 rounded font-mono">
-                {Math.round((actionRecommendation.confidence || 0.94) * 100)}% Match
+
+              <div className={`text-xs font-bold ${headlineColor} leading-snug`}>
+                {actionRecommendation.headline}
+              </div>
+
+              {/* Recommended Agent Action (What to do next) */}
+              <div className={`bg-white border ${actionBoxBorder} rounded-md p-2.5 space-y-1 text-xs shadow-2xs`}>
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${actionLabelColor} flex items-center gap-1`}>
+                  <CornerDownRight className={`w-3 h-3 ${actionIconColor}`} />
+                  Recommended Next Agent Action:
+                </span>
+                <p className="font-bold text-slate-900 leading-relaxed">
+                  {actionRecommendation.recommended_action}
+                </p>
+              </div>
+
+              {/* Memory Rationale */}
+              <div className={`${rationaleBg} border rounded-md p-2 text-[11px] text-slate-800 space-y-0.5`}>
+                <span className={`text-[10px] font-bold ${rationaleTitle} uppercase tracking-wider flex items-center gap-1`}>
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-600 inline" />
+                  Memory & Frustration Rationale:
+                </span>
+                <p className="leading-relaxed font-normal">{actionRecommendation.rationale}</p>
+              </div>
+
+              <span className="text-[10px] text-slate-500 italic flex items-center gap-1 pt-0.5">
+                <Info className="w-3 h-3 text-slate-400 inline flex-shrink-0" />
+                Support representative retains full control. Action recommendation is advisory prior to dispatching reply.
               </span>
             </div>
-
-            <div className="text-xs font-bold text-red-900 leading-snug">
-              {actionRecommendation.headline}
-            </div>
-
-            {/* Recommended Agent Action (What to do next) */}
-            <div className="bg-white border border-red-200 rounded-md p-2.5 space-y-1 text-xs shadow-2xs">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-red-800 flex items-center gap-1">
-                <CornerDownRight className="w-3 h-3 text-red-600" />
-                Recommended Next Agent Action:
-              </span>
-              <p className="font-bold text-slate-900 leading-relaxed">
-                {actionRecommendation.recommended_action}
-              </p>
-            </div>
-
-            {/* Memory Rationale */}
-            <div className="bg-red-100/50 border border-red-200 rounded-md p-2 text-[11px] text-slate-800 space-y-0.5">
-              <span className="text-[10px] font-bold text-red-900 uppercase tracking-wider block">
-                💡 Memory & Frustration Rationale:
-              </span>
-              <p className="leading-relaxed font-normal">{actionRecommendation.rationale}</p>
-            </div>
-
-            <span className="text-[10px] text-slate-500 italic block pt-0.5">
-              ℹ️ Support representative retains full control. Action recommendation is advisory prior to dispatching reply.
-            </span>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Feature 1: Multi-Session Frustration Trajectory Card */}
         {frustrationTrajectory && (
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 space-y-3 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
-                Multi-Session Frustration Trajectory
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1.5 min-w-0 truncate">
+                <TrendingUp className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                <span className="truncate">Frustration Trajectory</span>
               </span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border whitespace-nowrap flex-shrink-0 ${
                 frustrationTrajectory.overall_trend === 'increasing'
                   ? 'bg-red-100 text-red-800 border-red-300'
                   : frustrationTrajectory.overall_trend === 'decreasing'
                   ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                   : 'bg-amber-100 text-amber-800 border-amber-300'
               }`}>
-                {frustrationTrajectory.overall_trend === 'increasing' ? '📈 Increasing Frustration' :
-                 frustrationTrajectory.overall_trend === 'decreasing' ? '📉 Decreasing Frustration' : '➡️ Stable Frustration'}
+                {frustrationTrajectory.overall_trend === 'increasing' ? (
+                  <span className="inline-flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-red-600 flex-shrink-0" />
+                    <span>Increasing Frustration</span>
+                  </span>
+                ) : frustrationTrajectory.overall_trend === 'decreasing' ? (
+                  <span className="inline-flex items-center gap-1">
+                    <TrendingDown className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                    <span>Decreasing Frustration</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1">
+                    <Minus className="w-3 h-3 text-amber-600 flex-shrink-0" />
+                    <span>Stable Frustration</span>
+                  </span>
+                )}
               </span>
             </div>
 
@@ -249,19 +305,20 @@ export default function AgentMemoryPanel({
 
         {/* MemGPT Core Memory Buffer (Working Memory Pinned Facts) Card */}
         <div className="bg-amber-50/90 border border-amber-300 rounded-lg p-3.5 space-y-2.5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <Pin className="w-3.5 h-3.5 text-amber-700 fill-amber-500" />
-              <span className="text-xs font-bold text-amber-950 uppercase tracking-wide">
-                Core Memory Buffer
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Pin className="w-3.5 h-3.5 text-amber-700 fill-amber-500 flex-shrink-0" />
+              <span className="text-xs font-bold text-amber-950 uppercase tracking-wide truncate">
+                Core Memory
               </span>
-              <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-1.5 py-0.5 rounded font-mono">
-                MemGPT Working Memory
+              <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-1.5 py-0.5 rounded font-mono whitespace-nowrap flex-shrink-0">
+                MemGPT
               </span>
             </div>
             <button
+              type="button"
               onClick={() => setShowAddFact(!showAddFact)}
-              className="text-[11px] font-bold text-amber-900 hover:text-amber-950 bg-amber-200/80 hover:bg-amber-300 px-2 py-0.5 rounded flex items-center gap-1 transition"
+              className="text-[11px] font-bold text-amber-900 hover:text-amber-950 bg-amber-200/80 hover:bg-amber-300 px-2.5 py-0.5 rounded flex items-center gap-1 transition whitespace-nowrap flex-shrink-0 shadow-2xs"
             >
               <Plus className="w-3 h-3" />
               <span>{showAddFact ? 'Cancel' : 'Pin Fact'}</span>
@@ -342,23 +399,26 @@ export default function AgentMemoryPanel({
                 <button
                   type="button"
                   onClick={() => handleAddFact("Prime Tape Packaging Confusion", "Packaging Issue")}
-                  className="bg-white border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded hover:bg-amber-100 font-medium"
+                  className="bg-white border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded hover:bg-amber-100 font-medium inline-flex items-center gap-1"
                 >
-                  📦 Tape Confusion
+                  <Package className="w-3 h-3 text-amber-800" />
+                  Tape Confusion
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddFact("4 Contact Turns Without Resolution", "Escalation Risk")}
-                  className="bg-white border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded hover:bg-amber-100 font-medium"
+                  className="bg-white border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded hover:bg-amber-100 font-medium inline-flex items-center gap-1"
                 >
-                  🚨 4 Escalations
+                  <AlertTriangle className="w-3 h-3 text-red-600" />
+                  4 Escalations
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAddFact("Prefers Email Notifications", "Preference")}
-                  className="bg-white border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded hover:bg-amber-100 font-medium"
+                  className="bg-white border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded hover:bg-amber-100 font-medium inline-flex items-center gap-1"
                 >
-                  💬 Email Preference
+                  <Mail className="w-3 h-3 text-amber-800" />
+                  Email Preference
                 </button>
               </div>
             </div>
@@ -376,8 +436,9 @@ export default function AgentMemoryPanel({
               Customer Effort Trajectory
             </span>
             {resolveSuccess ? (
-              <span className="text-[10px] text-emerald-800 font-bold bg-emerald-200/80 px-2 py-0.5 rounded animate-bounce">
-                ✨ Reflected in Hindsight
+              <span className="text-[10px] text-emerald-800 font-bold bg-emerald-200/80 px-2 py-0.5 rounded inline-flex items-center gap-1 animate-bounce">
+                <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                Reflected in Hindsight
               </span>
             ) : (
               <span className="text-[10px] text-slate-500 font-mono">Hindsight Opinion</span>
@@ -497,8 +558,8 @@ export default function AgentMemoryPanel({
         </div>
       </div>
 
-      {/* "Mark Resolved" Action Button (SRS FR-7, FR-8) */}
-      <div className="p-3.5 border-t border-slate-200 bg-slate-50">
+      {/* "Mark Resolved" Action Button (SRS FR-7, FR-8) — Fixed Footer */}
+      <div className="p-3.5 border-t border-slate-200 bg-slate-50 flex-shrink-0 sticky bottom-0 z-10">
         <button
           onClick={handleResolve}
           disabled={resolving}

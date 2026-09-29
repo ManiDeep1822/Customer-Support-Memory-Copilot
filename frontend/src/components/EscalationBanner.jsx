@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, AlertTriangle } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 
 export default function EscalationBanner({ riskProfile, memoryEnabled }) {
   // Only render when risk_level is escalate AND memory is enabled (SRS FR-9)

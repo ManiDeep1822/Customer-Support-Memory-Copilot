@@ -53,6 +53,17 @@ class HindsightService:
         # In-memory cache for fast memory panel loading
         self._recall_cache: Dict[str, List[RecalledItem]] = {}
 
+        # Pre-seed recall cache from local thread history for immediate 0ms UI rendering
+        if FILTERED_CUSTOMERS_FILE.exists():
+            try:
+                with open(FILTERED_CUSTOMERS_FILE, "r", encoding="utf-8") as f:
+                    for c in json.load(f):
+                        cid = c.get("customer_id")
+                        if cid:
+                            self._recall_cache[cid] = self._simulated_recall(cid)
+            except Exception as e:
+                logger.warning(f"Could not pre-seed recall cache: {e}")
+
     def _get_client(self) -> Optional[Hindsight]:
         """Provides an active Hindsight client instance bound to current event loop."""
         if not self.is_live or not Hindsight:
@@ -101,13 +112,18 @@ class HindsightService:
         Strictly filters by customer_id to enforce per-customer isolation (Hard Rule 4).
         Falls back gracefully per TRS §7 on timeout/error.
         """
-        # Fast return from in-memory cache if query is default/empty
-        if not query and customer_id in self._recall_cache:
+        cache_key = f"{customer_id}:{query.strip()}"
+        if cache_key in self._recall_cache:
+            return self._recall_cache[cache_key]
+        if customer_id in self._recall_cache:
             return self._recall_cache[customer_id]
 
         client = self._get_client()
         if not client:
-            return self._simulated_recall(customer_id)
+            fallback = self._simulated_recall(customer_id)
+            self._recall_cache[cache_key] = fallback
+            self._recall_cache[customer_id] = fallback
+            return fallback
 
         try:
             res = await asyncio.wait_for(
@@ -116,7 +132,7 @@ class HindsightService:
                     query=query or "previous support issues orders replacements and resolutions",
                     tags=[customer_id]
                 ),
-                timeout=15.0
+                timeout=4.0
             )
             items = []
             results = getattr(res, "results", []) or []
@@ -144,18 +160,19 @@ class HindsightService:
                     confidence=float(conf) if conf is not None else 0.88
                 ))
             if not items:
-                # Add fallback contextual items if fresh bank
                 items = self._simulated_recall(customer_id)
 
+            self._recall_cache[cache_key] = items
             self._recall_cache[customer_id] = items
             return items
         except (asyncio.TimeoutError, Exception) as e:
-            logger.warning(f"Hindsight recall timeout/exception for {customer_id}: {e}")
+            logger.warning(f"Hindsight recall timeout/exception for {customer_id}: {type(e).__name__}: {e or 'timed out'}")
             if customer_id in self._recall_cache:
                 return self._recall_cache[customer_id]
             fallback = self._simulated_recall(customer_id)
             if fallback:
                 self._recall_cache[customer_id] = fallback
+                self._recall_cache[cache_key] = fallback
                 return fallback
             return [RecalledItem(type="experience", summary="memory temporarily unavailable", confidence=0.0)]
         finally:
