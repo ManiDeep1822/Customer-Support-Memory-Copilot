@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AmazonLogo, AmazonEmblem, GroqLogo, HindsightLogo } from './components/BrandLogos';
+import { AmazonLogo, AmazonEmblem, HindsightLogo } from './components/BrandLogos';
 import TicketList from './components/TicketList';
 import ConversationThread from './components/ConversationThread';
 import EscalationBanner from './components/EscalationBanner';
@@ -286,16 +286,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Right: Partner Badges (Groq LPU + Hindsight Memory) */}
+        {/* Right: Partner Badges (Hindsight Memory) */}
         <div className="flex items-center gap-3 text-xs">
-          {/* Groq Enterprise Inference Badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200">
-            <GroqLogo className="w-3.5 h-3.5" />
-            <span className="text-[11px]">
-              Fast Inference: <strong className="font-semibold text-white">Groq LPU</strong>
-            </span>
-          </div>
-
           {/* Hindsight Persistent Memory System Badge */}
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold border transition-colors ${
             memoryEnabled 
