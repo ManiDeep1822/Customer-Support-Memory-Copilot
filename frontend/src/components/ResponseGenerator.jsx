@@ -285,7 +285,7 @@ export default function ResponseGenerator({
                 <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-600 text-xs">
                   <Loader2 className="w-7 h-7 animate-spin text-amber-500" />
                   <span className="font-semibold text-slate-700">Generating both Memory OFF (Stateless) & Memory ON (Hindsight) responses...</span>
-                  <span className="text-[11px] text-slate-400">Querying Groq LPU inference engine in parallel</span>
+                  <span className="text-[11px] text-slate-400">Querying inference engine in parallel</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs items-stretch h-full">
