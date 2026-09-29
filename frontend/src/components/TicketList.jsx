@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle, Search, RefreshCw } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle, Search, RefreshCw, X } from 'lucide-react';
 
 export default function TicketList({ tickets, selectedId, onSelectTicket, loading, onRefresh, widthClass = "w-80" }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,24 +41,28 @@ export default function TicketList({ tickets, selectedId, onSelectTicket, loadin
   };
 
   return (
-    <div className={`${widthClass} transition-all duration-300 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col h-full`}>
-      {/* Header */}
-      <div className="p-3.5 border-b border-slate-200 flex items-center justify-between bg-white">
+    <div className={`${widthClass} flex-shrink-0 bg-white flex flex-col h-full overflow-hidden`}>
+      {/* Header — Fixed Navbar */}
+      <div className="p-3.5 border-b border-slate-200 flex items-center justify-between bg-white flex-shrink-0 sticky top-0 z-10">
         <div>
           <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Ticket Queue</h2>
           <p className="text-xs text-slate-500">AmazonHelp ({filteredTickets.length} cases)</p>
         </div>
         <button 
-          onClick={onRefresh} 
-          title="Refresh Queue"
-          className="p-1.5 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            if (onRefresh) onRefresh();
+          }} 
+          title="Refresh Queue and Ticket Data"
+          className="p-1.5 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition active:scale-95"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-amber-600' : ''}`} />
         </button>
       </div>
 
-      {/* Search & Scenario Preset Filters */}
-      <div className="p-2.5 border-b border-slate-200 bg-slate-50/60 flex flex-col gap-2">
+      {/* Search & Scenario Preset Filters — Fixed */}
+      <div className="p-2.5 border-b border-slate-200 bg-slate-50/60 flex flex-col gap-2 flex-shrink-0">
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
           <input 
@@ -66,8 +70,18 @@ export default function TicketList({ tickets, selectedId, onSelectTicket, loadin
             placeholder="Filter by customer or text..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border border-slate-300 rounded-md pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+            className="w-full bg-white border border-slate-300 rounded-md pl-8 pr-7 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="absolute right-2 top-2 text-slate-400 hover:text-slate-700"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Demo Scenario Presets */}
@@ -93,7 +107,7 @@ export default function TicketList({ tickets, selectedId, onSelectTicket, loadin
       </div>
 
       {/* Ticket List */}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 min-h-0">
         {loading && tickets.length === 0 ? (
           <div className="p-6 text-center text-xs text-slate-500">Loading tickets...</div>
         ) : filteredTickets.length === 0 ? (

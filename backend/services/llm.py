@@ -103,7 +103,7 @@ class LLMService:
     ) -> str:
         core_facts_text = ""
         if core_memory and len(core_memory) > 0:
-            core_facts_text = "\n[PINNED CORE MEMORY FACTS (MemGPT Working Memory)]:\n" + "\n".join([f"📌 {fact}" for fact in core_memory]) + "\n"
+            core_facts_text = "\n[PINNED CORE MEMORY FACTS (MemGPT Working Memory)]:\n" + "\n".join([f"- {fact}" for fact in core_memory]) + "\n"
 
         if not memory_enabled or not recalled_items:
             # Memory OFF (FR-4): Standard stateless bot
@@ -342,11 +342,11 @@ class LLMService:
         else:
             topic_category = "general_support"
 
-        if risk.risk_level == "escalate" or level in ["Critical", "High"] or contacts >= 3:
+        if risk.risk_level == "escalate":
             if topic_category == "refund_delay":
                 return AgentActionRecommendation(
                     action_type="issue_goodwill",
-                    headline="🚨 Priority Refund Acceleration & Goodwill Credit",
+                    headline="Priority Refund Acceleration & Goodwill Credit",
                     recommended_action=f"Expedite pending refund with billing department immediately and issue a $15 courtesy account credit prior to dispatching customer reply.",
                     rationale=f"Customer has contacted support {contacts} times regarding refund delay with high frustration ({score}% distress score). Prompt financial resolution required.",
                     confidence=0.94
@@ -354,7 +354,7 @@ class LLMService:
             elif topic_category == "packaging_issue":
                 return AgentActionRecommendation(
                     action_type="escalate_manager",
-                    headline="🚨 Proactive Manager Escalation & Packaging Clarification",
+                    headline="Proactive Manager Escalation & Packaging Clarification",
                     recommended_action=f"Escalate ticket to Senior Support Lead. Review non-member Prime tape packaging rules and issue a $15 courtesy credit.",
                     rationale=f"Customer has contacted support {contacts} times with increasing frustration ({score}% score). Standard replies failed to clarify packaging policies.",
                     confidence=0.94
@@ -362,7 +362,7 @@ class LLMService:
             elif topic_category == "carrier_delivery":
                 return AgentActionRecommendation(
                     action_type="escalate_manager",
-                    headline="🚨 Proactive Carrier Escalation & Priority Redelivery",
+                    headline="Proactive Carrier Escalation & Priority Redelivery",
                     recommended_action=f"Contact carrier dispatch supervisor to override delivery failure status and schedule priority morning redelivery with direct tracking update.",
                     rationale=f"Customer turn #{contacts} regarding carrier delivery failure ('carrier closed'). Proactive carrier dispatch required.",
                     confidence=0.94
@@ -370,7 +370,7 @@ class LLMService:
             elif topic_category == "repetition_effort":
                 return AgentActionRecommendation(
                     action_type="escalate_manager",
-                    headline="🚨 Supervisor Fast-Track & Courtesy Credit",
+                    headline="Supervisor Fast-Track & Courtesy Credit",
                     recommended_action=f"Supervisor takeover: Bypass repetitive verification questions, take direct ownership, and apply a $15 goodwill credit.",
                     rationale=f"Customer expressing severe frustration over repeat contacts ({contacts} turns, {score}% distress score) and perceived lack of resolution effort.",
                     confidence=0.94
@@ -378,16 +378,16 @@ class LLMService:
             else:
                 return AgentActionRecommendation(
                     action_type="escalate_manager",
-                    headline="🚨 Proactive Manager Escalation & Goodwill Resolution",
+                    headline="Proactive Manager Escalation & Goodwill Resolution",
                     recommended_action=f"Escalate ticket to Senior Support Lead immediately. Review previous {contacts} unresolved contacts and issue a $15 courtesy credit.",
                     rationale=f"Customer has contacted support {contacts} times with high distress score ({score}%). Proactive resolution strongly advised.",
                     confidence=0.94
                 )
-        elif risk.risk_level == "watch" or level == "Medium" or contacts == 2:
+        elif risk.risk_level == "watch":
             if topic_category == "email_notification":
                 return AgentActionRecommendation(
                     action_type="verify_details",
-                    headline="⚠️ Immediate Email Resend & Delivery Verification",
+                    headline="Immediate Email Resend & Delivery Verification",
                     recommended_action="Resend order confirmation and tracking details directly to customer's verified email address and confirm receipt.",
                     rationale=f"Customer is on contact turn #{contacts} regarding unreceived notification email ({score}% distress score). System email resend recommended.",
                     confidence=0.88
@@ -395,15 +395,23 @@ class LLMService:
             elif topic_category == "refund_delay":
                 return AgentActionRecommendation(
                     action_type="verify_details",
-                    headline="⚠️ Refund Processing Status Verification",
+                    headline="Refund Processing Status Verification",
                     recommended_action="Verify refund transaction status with accounting and communicate expected bank processing timeline (3-5 business days).",
                     rationale=f"Customer is on contact turn #{contacts} inquiring on refund timeline ({score}% distress score). Clear timeline prevents escalation.",
+                    confidence=0.88
+                )
+            elif topic_category == "packaging_issue":
+                return AgentActionRecommendation(
+                    action_type="verify_details",
+                    headline="Packaging Policy & Shipping Tape Clarification",
+                    recommended_action="Clarify Amazon Prime branded packaging tape policy on non-Prime accounts and verify contents integrity.",
+                    rationale=f"Customer is on contact turn #{contacts} inquiring about package tape branding ({score}% distress score). Clarification prevents escalation.",
                     confidence=0.88
                 )
             elif topic_category == "carrier_delivery":
                 return AgentActionRecommendation(
                     action_type="verify_details",
-                    headline="⚠️ Priority Carrier Tracking Verification",
+                    headline="Priority Carrier Tracking Verification",
                     recommended_action="Trace current package GPS coordinates with carrier and provide exact updated delivery window.",
                     rationale=f"Customer on turn #{contacts} checking delayed shipment status. Clear tracking update calms frustration.",
                     confidence=0.88
@@ -411,7 +419,7 @@ class LLMService:
             elif topic_category == "repetition_effort":
                 return AgentActionRecommendation(
                     action_type="verify_details",
-                    headline="⚠️ Account Verification Fast-Track",
+                    headline="Account Verification Fast-Track",
                     recommended_action="Verify customer identity via order ID without repeating previously answered security questions.",
                     rationale=f"Customer turn #{contacts} with medium frustration trajectory ({score}% score). Streamlining verification avoids escalation.",
                     confidence=0.88
@@ -419,7 +427,7 @@ class LLMService:
             else:
                 return AgentActionRecommendation(
                     action_type="verify_details",
-                    headline="⚠️ Priority Order Status & Issue Clarification",
+                    headline="Priority Order Status & Issue Clarification",
                     recommended_action="Re-verify shipment tracking status and provide direct issue resolution steps before closing.",
                     rationale=f"Customer is on contact turn #{contacts} with medium frustration trajectory ({score}% score). Direct clarification prevents escalation.",
                     confidence=0.88
@@ -427,7 +435,7 @@ class LLMService:
         else:
             return AgentActionRecommendation(
                 action_type="standard_resolution",
-                headline="✅ Standard First-Contact Assistance",
+                headline="Standard First-Contact Assistance",
                 recommended_action="Verify customer account ID and provide standard order status update.",
                 rationale="First-contact inquiry with normal sentiment trajectory and zero previous escalations.",
                 confidence=0.85

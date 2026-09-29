@@ -16,66 +16,6 @@ export default function App() {
   const [memoryLoading, setMemoryLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
 
-  // Dynamic Layout & Resizable Frames State (Fixed 70px Header, Mouse Drag Column & Middle Splitters)
-  const [queueWidth, setQueueWidth] = useState(320); // Width in px
-  const [memoryWidth, setMemoryWidth] = useState(360); // Width in px
-  const [threadHeightPercent, setThreadHeightPercent] = useState(55); // Height percentage of conversation vs composer
-  const [isResizingLeft, setIsResizingLeft] = useState(false);
-  const [isResizingRight, setIsResizingRight] = useState(false);
-  const [isResizingMiddle, setIsResizingMiddle] = useState(false);
-
-  const mainRef = useRef(null);
-
-  // Mouse Drag Handlers for Resizing Left Queue Frame
-  const handleMouseDownLeft = (e) => {
-    e.preventDefault();
-    setIsResizingLeft(true);
-  };
-
-  // Mouse Drag Handlers for Resizing Right Memory Frame
-  const handleMouseDownRight = (e) => {
-    e.preventDefault();
-    setIsResizingRight(true);
-  };
-
-  // Mouse Drag Handlers for Resizing Middle Vertical Frame
-  const handleMouseDownMiddle = (e) => {
-    e.preventDefault();
-    setIsResizingMiddle(true);
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (isResizingLeft) {
-        const newWidth = Math.max(220, Math.min(500, e.clientX));
-        setQueueWidth(newWidth);
-      } else if (isResizingRight) {
-        const newWidth = Math.max(260, Math.min(550, window.innerWidth - e.clientX));
-        setMemoryWidth(newWidth);
-      } else if (isResizingMiddle && mainRef.current) {
-        const rect = mainRef.current.getBoundingClientRect();
-        const relativeY = e.clientY - rect.top;
-        const newPercent = Math.max(25, Math.min(75, (relativeY / rect.height) * 100));
-        setThreadHeightPercent(newPercent);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizingLeft(false);
-      setIsResizingRight(false);
-      setIsResizingMiddle(false);
-    };
-
-    if (isResizingLeft || isResizingRight || isResizingMiddle) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizingLeft, isResizingRight, isResizingMiddle]);
-
   // Client-side cache refs for instant switching and race condition handling
   const ticketCacheRef = useRef({});
   const memoryCacheRef = useRef({});
@@ -83,75 +23,100 @@ export default function App() {
   const selectedIdRef = useRef(null);
 
   // Handle ticket selection with decoupled fast rendering and client caching
-  const handleSelectTicket = async (id) => {
+  const handleSelectTicket = async (id, force = false) => {
     if (!id) return;
     setSelectedId(id);
     selectedIdRef.current = id;
     activeRequestIdRef.current = id;
 
-    // 1. Instant Cache Check for Ticket Detail (0ms)
-    if (ticketCacheRef.current[id]) {
+    // 1. Instant Cache Check for Ticket Detail (0ms) - skip if force
+    if (!force && ticketCacheRef.current[id]) {
       setTicketDetail(ticketCacheRef.current[id]);
     }
 
-    // 2. Instant Cache Check for Memory (0ms)
-    if (memoryCacheRef.current[id]) {
+    // 2. Instant Cache Check for Memory (0ms) - skip if force
+    if (!force && memoryCacheRef.current[id]) {
       setRecalledItems(memoryCacheRef.current[id]);
       setMemoryLoading(false);
     } else {
-      setRecalledItems([]);
+      if (force) setRecalledItems([]);
       setMemoryLoading(true);
     }
 
-    // 3. Fast Detail Fetch (20-40ms) — independent of slow cloud memory
-    try {
-      const res = await fetch(`/api/tickets/${id}`);
-      if (res.ok && activeRequestIdRef.current === id) {
-        const detail = await res.json();
-        ticketCacheRef.current[id] = detail;
-        setTicketDetail(detail);
-      }
-    } catch (err) {
-      console.error("Failed to load ticket detail:", err);
-    }
-
-    // 4. Background Memory Fetch — non-blocking!
-    try {
-      const memRes = await fetch(`/api/tickets/${id}/memory`);
-      if (memRes.ok && activeRequestIdRef.current === id) {
-        const mem = await memRes.json();
-        const items = mem.recalled_items || [];
-        memoryCacheRef.current[id] = items;
-        setRecalledItems(items);
-        if (mem.risk_profile) {
-          setTicketDetail(prev => (prev && activeRequestIdRef.current === id) ? { ...prev, risk_profile: mem.risk_profile } : prev);
+    // 3. Parallel fetch detail & memory simultaneously for maximum speed
+    const cacheBuster = force ? `?t=${Date.now()}` : '';
+    const detailPromise = fetch(`/api/tickets/${id}${cacheBuster}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(detail => {
+        if (detail && activeRequestIdRef.current === id) {
+          ticketCacheRef.current[id] = detail;
+          setTicketDetail(prev => ({
+            ...detail,
+            risk_profile: prev?.risk_profile || detail.risk_profile,
+            frustration_trajectory: prev?.frustration_trajectory || detail.frustration_trajectory,
+            action_recommendation: prev?.action_recommendation || detail.action_recommendation
+          }));
         }
-      }
-    } catch (memErr) {
-      console.error("Background memory load error:", memErr);
-    } finally {
-      if (activeRequestIdRef.current === id) {
-        setMemoryLoading(false);
-      }
-    }
+      })
+      .catch(err => console.error("Failed to load ticket detail:", err));
+
+    const memoryPromise = fetch(`/api/tickets/${id}/memory${cacheBuster}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(mem => {
+        if (mem && activeRequestIdRef.current === id) {
+          const items = mem.recalled_items || [];
+          memoryCacheRef.current[id] = items;
+          setRecalledItems(items);
+          if (mem.risk_profile) {
+            setTicketDetail(prev => (prev && activeRequestIdRef.current === id) ? {
+              ...prev,
+              risk_profile: mem.risk_profile,
+              frustration_trajectory: mem.frustration_trajectory || prev.frustration_trajectory,
+              action_recommendation: mem.action_recommendation || prev.action_recommendation
+            } : prev);
+          }
+        }
+      })
+      .catch(memErr => console.error("Memory load error:", memErr))
+      .finally(() => {
+        if (activeRequestIdRef.current === id) {
+          setMemoryLoading(false);
+        }
+      });
+
+    await Promise.allSettled([detailPromise, memoryPromise]);
   };
 
-  // Fetch ticket queue on mount
-  const fetchTickets = async () => {
+  // Fetch ticket queue on mount or user reload
+  const fetchTickets = async (forceRefresh = false) => {
     setLoading(true);
+    if (forceRefresh) {
+      ticketCacheRef.current = {};
+      memoryCacheRef.current = {};
+    }
     try {
-      const res = await fetch('/api/tickets');
+      const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
+      const res = await fetch(`/api/tickets${cacheBuster}`);
       if (res.ok) {
         const data = await res.json();
         setTickets(data);
-        if (data.length > 0 && !selectedIdRef.current) {
-          handleSelectTicket(data[0].customer_id);
+        const currentActive = selectedIdRef.current;
+        if (data.length > 0) {
+          if (!currentActive) {
+            handleSelectTicket(data[0].customer_id);
+          } else if (forceRefresh) {
+            await handleSelectTicket(currentActive, true);
+          }
         }
       }
     } catch (err) {
       console.error("Failed to load tickets:", err);
     } finally {
-      setLoading(false);
+      if (forceRefresh) {
+        setTimeout(() => setLoading(false), 350);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -179,6 +144,9 @@ export default function App() {
           if (selectedId) {
             memoryCacheRef.current[selectedId] = data.recalled_context;
           }
+        }
+        if (data.action_recommendation) {
+          setTicketDetail(prev => (prev && selectedId) ? { ...prev, action_recommendation: data.action_recommendation } : prev);
         }
         return data.agent_response;
       }
@@ -259,7 +227,9 @@ export default function App() {
           if (!prev) return prev;
           const updated = {
             ...prev,
-            risk_profile: data.updated_risk_profile
+            risk_profile: data.updated_risk_profile,
+            frustration_trajectory: data.frustration_trajectory || prev.frustration_trajectory,
+            action_recommendation: data.action_recommendation || prev.action_recommendation
           };
           if (selectedId) {
             ticketCacheRef.current[selectedId] = updated;
@@ -299,87 +269,73 @@ export default function App() {
     || "I am waiting for an update on my package.";
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 text-slate-900 font-sans antialiased overflow-hidden">
-      {/* Top Navbar — Prominent Authentic Amazon Customer Service Navigation Banner (Fixed 70px) */}
-      <header className="h-[70px] bg-[#131921] px-6 py-2.5 flex items-center justify-between flex-shrink-0 shadow-lg z-10 text-white border-b border-slate-800 select-none">
+    <div className="flex flex-col h-screen bg-slate-100 text-slate-900 font-sans antialiased overflow-hidden select-none">
+      {/* Top Navbar — Prominent Authentic Amazon Customer Service Navigation Banner (Fixed 56px) */}
+      <header className="h-14 bg-[#131921] px-5 flex items-center justify-between flex-shrink-0 shadow-md z-30 text-white border-b border-slate-800 select-none sticky top-0">
         {/* Left: Official Amazon.in Customer Service Branding */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <AmazonLogo className="h-7 w-auto" dark={true} />
-            <span className="text-slate-600 font-light text-2xl">|</span>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold tracking-tight text-white font-sans">
-                  amazon customer service
-                </span>
-                <span className="text-[11px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded font-bold border border-amber-400/40">
-                  Rep Copilot Workbench
-                </span>
-              </div>
-              <span className="text-[11px] text-slate-400 font-medium">
-                AmazonHelp Support Memory & Escalation Copilot System
-              </span>
-            </div>
+        <div className="flex items-center gap-3">
+          <AmazonLogo className="h-6 w-auto" dark={true} />
+          <span className="text-slate-600 font-light text-xl">|</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold tracking-tight text-white font-sans uppercase">
+              amazon customer service
+            </span>
+            <span className="text-[10px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded font-bold border border-amber-400/30">
+              Copilot Rep Desk
+            </span>
           </div>
         </div>
 
         {/* Right: Partner Badges (Groq LPU + Hindsight Memory) */}
-        <div className="flex items-center gap-3.5 text-xs">
+        <div className="flex items-center gap-3 text-xs">
           {/* Groq Enterprise Inference Badge */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-800/90 border border-slate-700 text-slate-200 shadow-xs">
-            <GroqLogo className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200">
+            <GroqLogo className="w-3.5 h-3.5" />
             <span className="text-[11px]">
               Fast Inference: <strong className="font-semibold text-white">Groq LPU</strong>
             </span>
           </div>
 
           {/* Hindsight Persistent Memory System Badge */}
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[11px] font-semibold border transition-colors shadow-xs ${
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold border transition-colors ${
             memoryEnabled 
               ? 'bg-emerald-950/80 text-emerald-300 border-emerald-600/60' 
               : 'bg-slate-800 text-slate-400 border-slate-700'
           }`}>
-            <HindsightLogo className="w-4 h-4" />
+            <HindsightLogo className="w-3.5 h-3.5" />
             <span>Hindsight Memory: {memoryEnabled ? 'Active' : 'Bypassed'}</span>
           </div>
         </div>
       </header>
 
-      {/* Main 3-Column Split Pane with Draggable Column & Row Resizers */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Column: Ticket Queue (Draggable Width) */}
-        <div style={{ width: `${queueWidth}px` }} className="flex-shrink-0 h-full flex flex-col transition-all duration-75">
+      {/* Main 3-Column Split Pane — Fixed, Non-Stretchable, Non-Draggable Layout */}
+      <div className="flex flex-1 overflow-hidden h-[calc(100vh-3.5rem)]">
+        {/* Left Column: Ticket Queue (Fixed 320px Width) */}
+        <aside className="w-80 flex-shrink-0 h-full flex flex-col min-w-[320px] max-w-[320px] bg-white border-r border-slate-200 overflow-hidden z-10">
           <TicketList
             tickets={tickets}
             selectedId={selectedId}
             onSelectTicket={handleSelectTicket}
             loading={loading}
-            onRefresh={fetchTickets}
+            onRefresh={() => fetchTickets(true)}
             widthClass="w-full"
           />
-        </div>
+        </aside>
 
-        {/* Draggable Column Splitter Handle 1 (Queue / Conversation) */}
-        <div 
-          onMouseDown={handleMouseDownLeft}
-          title="Click and drag left/right to resize Ticket Queue column"
-          className="w-2 hover:w-2.5 bg-slate-300 hover:bg-amber-500 cursor-col-resize transition-all flex items-center justify-center flex-shrink-0 select-none z-20 group"
-        >
-          <div className="h-8 w-1 bg-slate-400 group-hover:bg-white rounded-full" />
-        </div>
-
-        {/* Center Column: Active Conversation & Reply Generator with Vertical Frame Resizer */}
-        <main ref={mainRef} className="flex-1 flex flex-col bg-slate-50 overflow-hidden border-r border-slate-200 min-w-[320px]">
+        {/* Center Column: Active Conversation & Reply Generator (Fluid min-w-0, non-stretchable) */}
+        <main className="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden min-w-0 border-r border-slate-200 z-10">
           {ticketDetail ? (
             <>
               {/* Proactive Escalation Banner (SRS FR-9) */}
-              <EscalationBanner 
-                riskProfile={ticketDetail.risk_profile} 
-                memoryEnabled={memoryEnabled} 
-              />
+              <div className="flex-shrink-0">
+                <EscalationBanner 
+                  riskProfile={ticketDetail.risk_profile} 
+                  memoryEnabled={memoryEnabled} 
+                />
+              </div>
 
-              {/* Upper Middle Frame: Conversation Thread (Resizable Height) */}
-              <div style={{ height: `${threadHeightPercent}%` }} className="flex flex-col overflow-hidden flex-shrink-0">
+              {/* Upper Section: Conversation Thread (flex-1 min-h-0 scrollable) */}
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 <ConversationThread
                   customer={ticketDetail.customer}
                   threads={ticketDetail.threads}
@@ -387,19 +343,8 @@ export default function App() {
                 />
               </div>
 
-              {/* Draggable Row Splitter Handle (Middle Frame Top/Bottom Resizer) */}
-              <div 
-                onMouseDown={handleMouseDownMiddle}
-                title="Click and drag up/down to resize Conversation vs Reply Composer frame"
-                className="h-2.5 hover:h-3 bg-slate-200 hover:bg-amber-400 cursor-row-resize transition-all flex items-center justify-center flex-shrink-0 select-none border-y border-slate-300 z-20 group"
-              >
-                <div className="w-16 h-1 bg-slate-400 group-hover:bg-slate-900 rounded-full flex items-center justify-center">
-                  <div className="w-6 h-0.5 bg-white/80 rounded-full" />
-                </div>
-              </div>
-
-              {/* Lower Middle Frame: Reply Drafting Composer */}
-              <div className="flex-1 overflow-y-auto flex flex-col min-h-[160px]">
+              {/* Lower Section: Reply Drafting Composer (flex-shrink-0, sticky bottom) */}
+              <div className="flex-shrink-0 border-t border-slate-200 bg-white z-20">
                 <ResponseGenerator
                   customerId={selectedId}
                   incomingMessage={currentIncomingMsg}
@@ -419,17 +364,8 @@ export default function App() {
           )}
         </main>
 
-        {/* Draggable Column Splitter Handle 2 (Conversation / Memory Panel) */}
-        <div 
-          onMouseDown={handleMouseDownRight}
-          title="Click and drag left/right to resize Memory Panel column"
-          className="w-2 hover:w-2.5 bg-slate-300 hover:bg-amber-500 cursor-col-resize transition-all flex items-center justify-center flex-shrink-0 select-none z-20 group"
-        >
-          <div className="h-8 w-1 bg-slate-400 group-hover:bg-white rounded-full" />
-        </div>
-
-        {/* Right Column: Live Agent Memory Panel (Draggable Width) */}
-        <div style={{ width: `${memoryWidth}px` }} className="flex-shrink-0 h-full flex flex-col transition-all duration-75">
+        {/* Right Column: Live Agent Memory Panel (Fixed 410px Width) */}
+        <aside className="w-[410px] flex-shrink-0 h-full flex flex-col min-w-[410px] max-w-[410px] bg-white overflow-hidden z-10">
           <AgentMemoryPanel
             customerId={selectedId}
             memoryEnabled={memoryEnabled}
@@ -440,7 +376,7 @@ export default function App() {
             onResolveTicket={handleResolveTicket}
             memoryLoading={memoryLoading}
           />
-        </div>
+        </aside>
       </div>
     </div>
   );
