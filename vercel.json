@@ -16,14 +16,19 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "api/index.py"
+      "dest": "/api/index.py"
     },
     {
-      "handle": "filesystem"
+      "src": "/assets/(.*)",
+      "dest": "/frontend/assets/$1"
+    },
+    {
+      "src": "/vite.svg",
+      "dest": "/frontend/vite.svg"
     },
     {
       "src": "/(.*)",
-      "dest": "frontend/index.html"
+      "dest": "/frontend/index.html"
     }
   ]
 }
